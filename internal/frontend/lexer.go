@@ -54,6 +54,16 @@ func lexSegment(segment string) (common.Token, string) {
 			TokenKind: common.TokenCloseParanthesis,
 			Token:     ")",
 		}, segment[1:]
+	} else if segment[0] == '{' {
+		return common.Token{
+			TokenKind: common.TokenOpenCurly,
+			Token:     "{",
+		}, segment[1:]
+	} else if segment[0] == '}' {
+		return common.Token{
+			TokenKind: common.TokenCloseCurly,
+			Token:     "}",
+		}, segment[1:]
 	} else if segment[0] == '+' {
 		return common.Token{
 			TokenKind: common.TokenExpressionAdd,
@@ -119,11 +129,6 @@ func lexSegment(segment string) (common.Token, string) {
 			TokenKind: common.TokenIf,
 			Token:     "if",
 		}, segment[2:]
-	} else if len(segment) >= 4 && segment[:4] == "then" && (len(segment) == 4 || !isCharacterFromVariable(segment[4])) {
-		return common.Token{
-			TokenKind: common.TokenThen,
-			Token:     "then",
-		}, segment[4:]
 	} else if len(segment) >= 4 && segment[:4] == "else" && (len(segment) == 4 || !isCharacterFromVariable(segment[4])) {
 		return common.Token{
 			TokenKind: common.TokenElse,

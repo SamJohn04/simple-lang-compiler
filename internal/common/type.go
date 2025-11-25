@@ -32,8 +32,10 @@ const (
 	TokenCloseParanthesis
 
 	TokenIf
-	TokenThen
 	TokenElse
+
+	TokenOpenCurly
+	TokenCloseCurly
 
 	TokenGoto
 
@@ -71,8 +73,10 @@ var NameMapWithTokenKind = map[TokenKind]string{
 	TokenCloseParanthesis: "Close Paranthesis",
 
 	TokenIf:   "if",
-	TokenThen: "then",
 	TokenElse: "else",
+
+	TokenOpenCurly:  "Open Curly Braces",
+	TokenCloseCurly: "Close Curly Braces",
 
 	TokenGoto: "goto",
 

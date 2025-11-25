@@ -7,7 +7,7 @@ term = <input> | variable | literal
 expression = E
 relation = R
 assign = variable = expression | variable = relation
-instr = assign | <if> relation <then> instr | <if> relation <then> instr <else> instr | <goto> :label | <output> expression | <output> relation
+instr = assign | <if> relation { instr } | <if> relation { instr } <else> { instr } | <goto> :label | <output> expression | <output> relation
 label = :label
 
 R  -> E>E | E<E | E==E | E!=E | E>=E | E<=E | !R
@@ -20,19 +20,21 @@ F  -> term | (E) | epsilon
 
 E.g. Program:
 ```
-a = 10;
-b = 20;
+let a = 10;
+let b = 20;
 
-out = a + (b * 10)/input;
+let out = a + (b * 10)/input;
 output out;
 ```
 ```
-n = input;
-di = input;
+let n = input;
+let di = input;
 
-i = 0;
+let mut i = 0;
 :l1;
-if i >= n then goto :l2;
+if i >= n {
+    goto :l2;
+}
 output i;
 i = i + di;
 goto :l1;
