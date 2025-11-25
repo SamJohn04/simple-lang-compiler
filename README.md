@@ -7,10 +7,15 @@ term = <input> | variable | literal
 expression = E
 relation = R
 assign = variable = expression | variable = relation
-instr = assign | <if> relation { instr } | <if> relation { instr } <else> { instr } | <goto> :label | <output> expression | <output> relation
-label = :label
+instr = assign |
+    <if> relation { instr } |
+    <if> relation { instr } <else> { instr } |
+    <if> relation { instr } <else> <if> relation { instr } ... |
+    <while> relation { instr } |
+    <output> expression |
+    <output> relation
 
-R  -> E>E | E<E | E==E | E!=E | E>=E | E<=E | !R
+R  -> E>E | E<E | E==E | E!=E | E>=E | E<=E | !R | E
 E  -> TE'
 E' -> +TE' | -TE' | epsilon
 T  -> FT'
@@ -31,14 +36,11 @@ let n = input;
 let di = input;
 
 let mut i = 0;
-:l1;
-if i >= n {
-    goto :l2;
+while i < n {
+    output i;
+    i = i + di;
 }
-output i;
-i = i + di;
-goto :l1;
 
-:l2 output i;
+output i;
 output n;
 ```

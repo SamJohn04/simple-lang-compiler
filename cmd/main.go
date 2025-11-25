@@ -12,10 +12,10 @@ func main() {
 	filename := os.Args[1]
 	file, _ := os.Open(filename)
 
-	out := make(chan common.Token)
-	go frontend.Lexer(file, out)
+	lex := make(chan common.Token)
+	go frontend.Lexer(file, lex)
 
-	for o := range out {
+	for o := range lex {
 		fmt.Println(o.Token, "Token", common.NameMapWithTokenKind[o.TokenKind])
 	}
 }

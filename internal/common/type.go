@@ -9,7 +9,6 @@ type TokenKind int
 
 const (
 	TokenIdent TokenKind = iota + 1
-	TokenLabel
 
 	TokenLiteralInt
 
@@ -34,10 +33,10 @@ const (
 	TokenIf
 	TokenElse
 
+	TokenWhile
+
 	TokenOpenCurly
 	TokenCloseCurly
-
-	TokenGoto
 
 	TokenInput
 	TokenOutput
@@ -50,7 +49,6 @@ const (
 
 var NameMapWithTokenKind = map[TokenKind]string{
 	TokenIdent: "Identifier",
-	TokenLabel: "Label",
 
 	TokenLiteralInt: "Literal Int",
 
@@ -75,10 +73,10 @@ var NameMapWithTokenKind = map[TokenKind]string{
 	TokenIf:   "if",
 	TokenElse: "else",
 
+	TokenWhile: "while",
+
 	TokenOpenCurly:  "Open Curly Braces",
 	TokenCloseCurly: "Close Curly Braces",
-
-	TokenGoto: "goto",
 
 	TokenInput:  "input",
 	TokenOutput: "output",

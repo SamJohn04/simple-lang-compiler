@@ -134,11 +134,11 @@ func lexSegment(segment string) (common.Token, string) {
 			TokenKind: common.TokenElse,
 			Token:     "else",
 		}, segment[4:]
-	} else if len(segment) >= 4 && segment[:4] == "goto" && (len(segment) == 4 || !isCharacterFromVariable(segment[4])) {
+	} else if len(segment) >= 5 && segment[:5] == "while" && (len(segment) == 5 || !isCharacterFromVariable(segment[5])) {
 		return common.Token{
-			TokenKind: common.TokenGoto,
-			Token:     "goto",
-		}, segment[4:]
+			TokenKind: common.TokenWhile,
+			Token:     "while",
+		}, segment[5:]
 	} else if len(segment) >= 5 && segment[:5] == "input" && (len(segment) == 5 || !isCharacterFromVariable(segment[5])) {
 		return common.Token{
 			TokenKind: common.TokenInput,
@@ -169,33 +169,6 @@ func lexSegment(segment string) (common.Token, string) {
 		}
 		return common.Token{
 			TokenKind: common.TokenIdent,
-			Token:     segment,
-		}, ""
-	}
-
-	if segment[0] == ':' {
-		for i, c := range segment[1:] {
-			if c >= 'A' && c <= 'Z' {
-				continue
-			} else if c >= 'a' && c <= 'z' {
-				continue
-			} else if c >= '0' && c <= '9' {
-				continue
-			} else if c == '_' {
-				continue
-			} else if i == 0 {
-				return common.Token{
-					TokenKind: common.TokenError,
-					Token:     segment,
-				}, ""
-			}
-			return common.Token{
-				TokenKind: common.TokenLabel,
-				Token:     segment[:i+1],
-			}, segment[i+1:]
-		}
-		return common.Token{
-			TokenKind: common.TokenLabel,
 			Token:     segment,
 		}, ""
 	}
