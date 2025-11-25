@@ -1,0 +1,222 @@
+package frontend
+
+import (
+	"bufio"
+	"io"
+	"strings"
+
+	"github.com/SamJohn04/simple-lang-compiler/internal/common"
+)
+
+func Lexer(reader io.Reader, output chan<- common.Token) {
+	scanner := bufio.NewScanner(reader)
+	defer close(output)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		lexLine(line, output)
+	}
+}
+
+func lexLine(line string, output chan<- common.Token) {
+	for len(line) > 0 {
+		op, remainingLine := lexSegment(line)
+		if op.TokenKind != common.TokenEmpty {
+			output <- op
+		}
+		line = remainingLine
+	}
+}
+
+func lexSegment(segment string) (common.Token, string) {
+	// Remove all leading and ending \t
+	segment = strings.Trim(segment, "\t")
+	// Remove all leading and ending ' '
+	segment = strings.Trim(segment, " ")
+
+	if len(segment) == 0 {
+		return common.Token{
+			TokenKind: common.TokenEmpty,
+			Token:     "",
+		}, ""
+	} else if segment[0] == ';' {
+		return common.Token{
+			TokenKind: common.TokenLineEnd,
+			Token:     ";",
+		}, segment[1:]
+	} else if segment[0] == '(' {
+		return common.Token{
+			TokenKind: common.TokenOpenParanthesis,
+			Token:     "(",
+		}, segment[1:]
+	} else if segment[0] == ')' {
+		return common.Token{
+			TokenKind: common.TokenCloseParanthesis,
+			Token:     ")",
+		}, segment[1:]
+	} else if segment[0] == '+' {
+		return common.Token{
+			TokenKind: common.TokenExpressionAdd,
+			Token:     "+",
+		}, segment[1:]
+	} else if segment[0] == '-' {
+		return common.Token{
+			TokenKind: common.TokenExpressionSub,
+			Token:     "-",
+		}, segment[1:]
+	} else if segment[0] == '*' {
+		return common.Token{
+			TokenKind: common.TokenExpressionMul,
+			Token:     "*",
+		}, segment[1:]
+	} else if segment[0] == '/' {
+		return common.Token{
+			TokenKind: common.TokenExpressionDiv,
+			Token:     "/",
+		}, segment[1:]
+	} else if segment[0] == '%' {
+		return common.Token{
+			TokenKind: common.TokenExpressionModulo,
+			Token:     "%",
+		}, segment[1:]
+	} else if len(segment) >= 2 && segment[:2] == "==" {
+		return common.Token{
+			TokenKind: common.TokenRelationalEquals,
+			Token:     "==",
+		}, segment[2:]
+	} else if len(segment) >= 2 && segment[:2] == "!=" {
+		return common.Token{
+			TokenKind: common.TokenRelationalNotEquals,
+			Token:     "!=",
+		}, segment[2:]
+	} else if len(segment) >= 2 && segment[:2] == ">=" {
+		return common.Token{
+			TokenKind: common.TokenRelationalGreaterThanOrEquals,
+			Token:     ">=",
+		}, segment[2:]
+	} else if len(segment) >= 2 && segment[:2] == "<=" {
+		return common.Token{
+			TokenKind: common.TokenRelationalLesserThanOrEquals,
+			Token:     "<=",
+		}, segment[2:]
+	} else if segment[0] == '>' {
+		return common.Token{
+			TokenKind: common.TokenRelationalGreaterThan,
+			Token:     ">",
+		}, segment[1:]
+	} else if segment[0] == '<' {
+		return common.Token{
+			TokenKind: common.TokenRelationalLesserThan,
+			Token:     "<",
+		}, segment[1:]
+	} else if segment[0] == '=' {
+		return common.Token{
+			TokenKind: common.TokenAssignment,
+			Token:     "=",
+		}, segment[1:]
+	} else if len(segment) >= 2 && segment[:2] == "if" && (len(segment) == 2 || !isCharacterFromVariable(segment[2])) {
+		return common.Token{
+			TokenKind: common.TokenIf,
+			Token:     "if",
+		}, segment[2:]
+	} else if len(segment) >= 4 && segment[:4] == "then" && (len(segment) == 4 || !isCharacterFromVariable(segment[4])) {
+		return common.Token{
+			TokenKind: common.TokenThen,
+			Token:     "then",
+		}, segment[4:]
+	} else if len(segment) >= 4 && segment[:4] == "else" && (len(segment) == 4 || !isCharacterFromVariable(segment[4])) {
+		return common.Token{
+			TokenKind: common.TokenElse,
+			Token:     "else",
+		}, segment[4:]
+	} else if len(segment) >= 4 && segment[:4] == "goto" && (len(segment) == 4 || !isCharacterFromVariable(segment[4])) {
+		return common.Token{
+			TokenKind: common.TokenGoto,
+			Token:     "goto",
+		}, segment[4:]
+	} else if len(segment) >= 5 && segment[:5] == "input" && (len(segment) == 5 || !isCharacterFromVariable(segment[5])) {
+		return common.Token{
+			TokenKind: common.TokenInput,
+			Token:     "input",
+		}, segment[5:]
+	} else if len(segment) >= 6 && segment[:6] == "output" && (len(segment) == 6 || !isCharacterFromVariable(segment[6])) {
+		return common.Token{
+			TokenKind: common.TokenOutput,
+			Token:     "output",
+		}, segment[6:]
+	}
+
+	if isCharacterFromVariable(segment[0]) && (segment[0] < '0' || segment[0] > '9') {
+		for i, c := range segment {
+			if c >= 'A' && c <= 'Z' {
+				continue
+			} else if c >= 'a' && c <= 'z' {
+				continue
+			} else if c >= '0' && c <= '9' {
+				continue
+			} else if c == '_' {
+				continue
+			}
+			return common.Token{
+				TokenKind: common.TokenIdent,
+				Token:     segment[:i],
+			}, segment[i:]
+		}
+		return common.Token{
+			TokenKind: common.TokenIdent,
+			Token:     segment,
+		}, ""
+	}
+
+	if segment[0] == ':' {
+		for i, c := range segment[1:] {
+			if c >= 'A' && c <= 'Z' {
+				continue
+			} else if c >= 'a' && c <= 'z' {
+				continue
+			} else if c >= '0' && c <= '9' {
+				continue
+			} else if c == '_' {
+				continue
+			} else if i == 0 {
+				return common.Token{
+					TokenKind: common.TokenError,
+					Token:     segment,
+				}, ""
+			}
+			return common.Token{
+				TokenKind: common.TokenLabel,
+				Token:     segment[:i+1],
+			}, segment[i+1:]
+		}
+		return common.Token{
+			TokenKind: common.TokenLabel,
+			Token:     segment,
+		}, ""
+	}
+
+	if segment[0] >= '0' && segment[0] <= '9' {
+		for i, c := range segment {
+			if c >= '0' && c <= '9' {
+				continue
+			}
+			return common.Token{
+				TokenKind: common.TokenLiteralInt,
+				Token:     segment[:i],
+			}, segment[i:]
+		}
+		return common.Token{
+			TokenKind: common.TokenLiteralInt,
+			Token:     segment,
+		}, ""
+	}
+
+	return common.Token{
+		TokenKind: common.TokenError,
+		Token:     segment,
+	}, ""
+}
+
+func isCharacterFromVariable(c byte) bool {
+	return c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_'
+}
