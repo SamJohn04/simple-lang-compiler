@@ -35,6 +35,9 @@ const (
 
 	TokenWhile
 
+	TokenLet
+	TokenMutable
+
 	TokenOpenCurly
 	TokenCloseCurly
 
@@ -74,6 +77,9 @@ var NameMapWithTokenKind = map[TokenKind]string{
 	TokenElse: "else",
 
 	TokenWhile: "while",
+
+	TokenLet:     "let",
+	TokenMutable: "mut",
 
 	TokenOpenCurly:  "Open Curly Braces",
 	TokenCloseCurly: "Close Curly Braces",

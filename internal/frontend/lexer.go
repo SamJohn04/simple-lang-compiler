@@ -149,9 +149,19 @@ func lexSegment(segment string) (common.Token, string) {
 			TokenKind: common.TokenOutput,
 			Token:     "output",
 		}, segment[6:]
+	} else if len(segment) >= 3 && segment[:3] == "let" && (len(segment) == 3 || !isCharacterFromVariable(segment[3])) {
+		return common.Token{
+			TokenKind: common.TokenLet,
+			Token:     "let",
+		}, segment[3:]
+	} else if len(segment) >= 3 && segment[:3] == "mut" && (len(segment) == 3 || !isCharacterFromVariable(segment[3])) {
+		return common.Token{
+			TokenKind: common.TokenMutable,
+			Token:     "mut",
+		}, segment[3:]
 	}
 
-	if isCharacterFromVariable(segment[0]) && (segment[0] < '0' || segment[0] > '9') {
+	if isCharacterFromVariable(segment[0]) && !(segment[0] >= '0' && segment[0] <= '9') {
 		for i, c := range segment {
 			if c >= 'A' && c <= 'Z' {
 				continue
