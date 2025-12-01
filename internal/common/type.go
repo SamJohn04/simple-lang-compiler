@@ -46,6 +46,8 @@ const (
 
 	TokenLineEnd
 
+	TokenEOF
+
 	TokenEmpty
 	TokenError
 )
@@ -88,6 +90,8 @@ var NameMapWithTokenKind = map[TokenKind]string{
 	TokenOutput: "output",
 
 	TokenLineEnd: "Line End",
+
+	TokenEOF: "End of File",
 
 	TokenEmpty: "Empty Token",
 	TokenError: "Error Token",

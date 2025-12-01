@@ -8,6 +8,7 @@ import (
 	"github.com/SamJohn04/simple-lang-compiler/internal/common"
 )
 
+// The basic idea of this function is to accept both stdin and file input as parameters.
 func Lexer(reader io.Reader, output chan<- common.Token) {
 	scanner := bufio.NewScanner(reader)
 	defer close(output)
@@ -16,9 +17,16 @@ func Lexer(reader io.Reader, output chan<- common.Token) {
 		line := scanner.Text()
 		lexLine(line, output)
 	}
+
+	// To denote the end of scanner
+	output <- common.Token{
+		TokenKind: common.TokenEOF,
+		Token:     "",
+	}
 }
 
 func lexLine(line string, output chan<- common.Token) {
+	// Until the length of line is 0, keep calling lexSegment
 	for len(line) > 0 {
 		op, remainingLine := lexSegment(line)
 		if op.TokenKind != common.TokenEmpty {
