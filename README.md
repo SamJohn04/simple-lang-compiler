@@ -8,19 +8,21 @@ expression = E
 relation = R
 assign = variable = expression | variable = relation
 instr = assign |
-    <if> relation { instr } |
-    <if> relation { instr } <else> { instr } |
-    <if> relation { instr } <else> <if> relation { instr } ... |
-    <while> relation { instr } |
+    <if> relation { INS } |
+    <if> relation { INS } <else> { INS } |
+    <if> relation { INS } <else> <if> relation { INS } ... |
+    <while> relation { INS } |
     <output> expression |
     <output> relation
 
-R  -> E>E | E<E | E==E | E!=E | E>=E | E<=E | !R | E
-E  -> TE'
-E' -> +TE' | -TE' | epsilon
-T  -> FT'
-T' -> *FT' | /FT' | %FT' | epsilon
-F  -> term | (E) | epsilon
+INS -> instr;INS | epsilon
+
+R -> !R | E>E | E<E | E==E | E!=E | E>=E | E<=E
+E -> E+T | E-T | T
+T -> T*F | T/F | T%F | F
+F -> term | (E)
+
+PROGRAM -> INS
 ```
 
 E.g. Program:
