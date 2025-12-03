@@ -18,7 +18,7 @@ J -> else M |
 M -> if R { INS } J |
     { INS }
 
-R -> !(R) | ER'
+R -> ER'
 R' -> >E | <E | ==E | !=E | >=E | <=E
 
 E -> TE'
