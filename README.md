@@ -2,27 +2,30 @@
 
 A compiler for a simple language, to help better understand the practical side of compilers.
 
+## Parser
+
 ```text
-term = <input> | variable | literal
-expression = E
-relation = R
-assign = variable = expression | variable = relation
-instr = assign |
-    <if> relation { INS } |
-    <if> relation { INS } <else> { INS } |
-    <if> relation { INS } <else> <if> relation { INS } ... |
-    <while> relation { INS } |
-    <output> expression |
-    <output> relation
+INS -> I;INS | epsilon
 
-INS -> instr;INS | epsilon
+I -> variable = E |
+    if R { INS } J |
+    while R { INS } |
+    output E
 
-R -> !R | E>E | E<E | E==E | E!=E | E>=E | E<=E
-E -> E+T | E-T | T
-T -> T*F | T/F | T%F | F
-F -> term | (E)
+J -> else M |
+    epsilon
 
-PROGRAM -> INS
+M -> if R { INS } J |
+    { INS }
+
+R -> !(R) | ER'
+R' -> >E | <E | ==E | !=E | >=E | <=E
+
+E -> TE'
+E' -> +TE' | -TE' | epsilon
+T -> FT'
+T' -> *FT' | /FT' | %FT' | epsilon
+F -> input | variable | literal | (E)
 ```
 
 E.g. Program:
