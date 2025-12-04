@@ -5,6 +5,12 @@ type Token struct {
 	Token     string
 }
 
+type ASTNode struct {
+	IsLeaf     bool
+	InnerToken Token
+	ChildNodes []ASTNode
+}
+
 type TokenKind int
 
 const (
@@ -50,6 +56,9 @@ const (
 
 	TokenEmpty
 	TokenError
+
+	// parser
+	TokenBlock
 )
 
 var NameMapWithTokenKind = map[TokenKind]string{
@@ -95,4 +104,6 @@ var NameMapWithTokenKind = map[TokenKind]string{
 
 	TokenEmpty: "Empty Token",
 	TokenError: "Error Token",
+
+	TokenBlock: "Code Block",
 }
