@@ -349,6 +349,10 @@ func parseR(output *common.ASTNode, input <-chan common.Token) error {
 }
 
 func parseR1(output *common.ASTNode, input <-chan common.Token) error {
+	if len(output.ChildNodes) == 0 {
+		// this should NOT happen!
+		return errors.New("empty set in R1")
+	}
 	resultE1 := output.ChildNodes[len(output.ChildNodes)-1].ShallowCopy()
 	if currPointer.TokenKind != common.TokenRelationalLesserThan &&
 		currPointer.TokenKind != common.TokenRelationalGreaterThan &&
@@ -358,6 +362,7 @@ func parseR1(output *common.ASTNode, input <-chan common.Token) error {
 		currPointer.TokenKind != common.TokenRelationalNotEquals {
 		return errors.New("unexpected parse token in R1")
 	}
+	// we go from (-> E) to (-> R -> E)
 	output.ChildNodes[len(output.ChildNodes)-1].IsLeaf = false
 	output.ChildNodes[len(output.ChildNodes)-1].InnerToken.TokenKind = currPointer.TokenKind
 	output.ChildNodes[len(output.ChildNodes)-1].InnerToken.Token = currPointer.Token
@@ -392,6 +397,11 @@ func parseE1(output *common.ASTNode, input <-chan common.Token) error {
 	if currPointer.TokenKind == common.TokenExpressionAdd ||
 		currPointer.TokenKind == common.TokenExpressionSub {
 		// E1 -> +TE1 | -TE1
+		if len(output.ChildNodes) == 0 {
+			// this should NOT happen!
+			return errors.New("empty set in E1")
+		}
+		// from (-> T) to (-> (+/-) -> T)
 		resultT := output.ChildNodes[len(output.ChildNodes)-1].ShallowCopy()
 		output.ChildNodes[len(output.ChildNodes)-1].IsLeaf = false
 		output.ChildNodes[len(output.ChildNodes)-1].InnerToken.Token = currPointer.Token
@@ -436,6 +446,11 @@ func parseT1(output *common.ASTNode, input <-chan common.Token) error {
 		currPointer.TokenKind == common.TokenExpressionDiv ||
 		currPointer.TokenKind == common.TokenExpressionModulo {
 		// T1 -> *FT1 | /FT1 | %FT1
+		if len(output.ChildNodes) == 0 {
+			// this should NOT happen!
+			return errors.New("empty set in T1")
+		}
+		// -> F to -> (* / '/' / %) -> F
 		resultF := output.ChildNodes[len(output.ChildNodes)-1].ShallowCopy()
 		output.ChildNodes[len(output.ChildNodes)-1].IsLeaf = false
 		output.ChildNodes[len(output.ChildNodes)-1].InnerToken.Token = currPointer.Token
