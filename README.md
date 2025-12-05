@@ -44,7 +44,7 @@ let mut i = 0;
 while i < n {
     output i;
     i = i + di;
-}
+};
 
 output i;
 output n;
