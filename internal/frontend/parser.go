@@ -31,16 +31,16 @@ func Parser(input <-chan common.Token) error {
 		},
 		ChildNodes: []common.ASTNode{},
 	}
-	err := parseI(output, input)
+	err := parseI(&output, input)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("error found at %v: %v", currPointer.Token, err)
 		return err
 	}
-	fmt.Println(output)
+	output.Display("")
 	return nil
 }
 
-func parseI(output common.ASTNode, input <-chan common.Token) error {
+func parseI(output *common.ASTNode, input <-chan common.Token) error {
 	if currPointer.TokenKind == common.TokenIdent ||
 		currPointer.TokenKind == common.TokenIf ||
 		currPointer.TokenKind == common.TokenWhile ||
@@ -64,7 +64,7 @@ func parseI(output common.ASTNode, input <-chan common.Token) error {
 	return errors.New("unexpected parse token in I")
 }
 
-func parseI1(output common.ASTNode, input <-chan common.Token) error {
+func parseI1(output *common.ASTNode, input <-chan common.Token) error {
 	if currPointer.TokenKind == common.TokenIdent {
 		// I1 -> v=E
 		value, ok := IdentTable[currPointer.Token]
@@ -95,7 +95,7 @@ func parseI1(output common.ASTNode, input <-chan common.Token) error {
 			return errors.New("'=' expected")
 		}
 		movePointerToNextToken(input)
-		return parseE(output.ChildNodes[len(output.ChildNodes)-1], input)
+		return parseE(&output.ChildNodes[len(output.ChildNodes)-1], input)
 	} else if currPointer.TokenKind == common.TokenIf {
 		// I1 -> if R { I } I4
 		ifBlock := common.ASTNode{
@@ -113,7 +113,7 @@ func parseI1(output common.ASTNode, input <-chan common.Token) error {
 		// |-------------------------|
 		// |  |         |   |        |
 		// R Block [...(R Block)] [Block]
-		err := parseR(ifBlock, input)
+		err := parseR(&ifBlock, input)
 		if err != nil {
 			return err
 		}
@@ -130,7 +130,7 @@ func parseI1(output common.ASTNode, input <-chan common.Token) error {
 			ChildNodes: []common.ASTNode{},
 		})
 		movePointerToNextToken(input)
-		err = parseI(ifBlock.ChildNodes[len(ifBlock.ChildNodes)-1], input)
+		err = parseI(&ifBlock.ChildNodes[len(ifBlock.ChildNodes)-1], input)
 		if err != nil {
 			return err
 		}
@@ -138,7 +138,7 @@ func parseI1(output common.ASTNode, input <-chan common.Token) error {
 			return errors.New("'}' expected")
 		}
 		movePointerToNextToken(input)
-		err = parseI4(ifBlock, input)
+		err = parseI4(&ifBlock, input)
 		if err != nil {
 			return err
 		}
@@ -155,7 +155,7 @@ func parseI1(output common.ASTNode, input <-chan common.Token) error {
 			ChildNodes: []common.ASTNode{},
 		}
 		movePointerToNextToken(input)
-		err := parseR(whileBlock, input)
+		err := parseR(&whileBlock, input)
 		if err != nil {
 			return err
 		}
@@ -171,7 +171,7 @@ func parseI1(output common.ASTNode, input <-chan common.Token) error {
 			ChildNodes: []common.ASTNode{},
 		})
 		movePointerToNextToken(input)
-		err = parseI(whileBlock.ChildNodes[len(whileBlock.ChildNodes)-1], input)
+		err = parseI(&whileBlock.ChildNodes[len(whileBlock.ChildNodes)-1], input)
 		if err != nil {
 			return err
 		}
@@ -196,7 +196,7 @@ func parseI1(output common.ASTNode, input <-chan common.Token) error {
 			ChildNodes: []common.ASTNode{},
 		}
 		movePointerToNextToken(input)
-		err := parseE(outputBlock, input)
+		err := parseE(&outputBlock, input)
 		if err != nil {
 			return err
 		}
@@ -206,7 +206,7 @@ func parseI1(output common.ASTNode, input <-chan common.Token) error {
 	return errors.New("unexpected parse token in I1")
 }
 
-func parseI4(output common.ASTNode, input <-chan common.Token) error {
+func parseI4(output *common.ASTNode, input <-chan common.Token) error {
 	if currPointer.TokenKind == common.TokenElse {
 		// I4 -> else I7
 		movePointerToNextToken(input)
@@ -218,7 +218,7 @@ func parseI4(output common.ASTNode, input <-chan common.Token) error {
 	return errors.New("unexpected parse token in I4; expecting else or ;")
 }
 
-func parseI6(output common.ASTNode, input <-chan common.Token) error {
+func parseI6(output *common.ASTNode, input <-chan common.Token) error {
 	if currPointer.TokenKind == common.TokenIdent {
 		// I6 -> v=E
 		_, ok := IdentTable[currPointer.Token]
@@ -248,7 +248,7 @@ func parseI6(output common.ASTNode, input <-chan common.Token) error {
 			return errors.New("'=' expected")
 		}
 		movePointerToNextToken(input)
-		return parseE(output.ChildNodes[len(output.ChildNodes)-1], input)
+		return parseE(&output.ChildNodes[len(output.ChildNodes)-1], input)
 	} else if currPointer.TokenKind == common.TokenMutable {
 		// mut v [I3] // I3 continued here
 		movePointerToNextToken(input)
@@ -285,12 +285,12 @@ func parseI6(output common.ASTNode, input <-chan common.Token) error {
 			},
 		})
 		movePointerToNextToken(input)
-		return parseE(output.ChildNodes[len(output.ChildNodes)-1], input)
+		return parseE(&output.ChildNodes[len(output.ChildNodes)-1], input)
 	}
 	return errors.New("unexpected parse token in I6")
 }
 
-func parseI7(output common.ASTNode, input <-chan common.Token) error {
+func parseI7(output *common.ASTNode, input <-chan common.Token) error {
 	if currPointer.TokenKind == common.TokenIf {
 		// I7 -> if R { I } I4
 		movePointerToNextToken(input)
@@ -310,7 +310,7 @@ func parseI7(output common.ASTNode, input <-chan common.Token) error {
 			ChildNodes: []common.ASTNode{},
 		})
 		movePointerToNextToken(input)
-		err = parseI(output.ChildNodes[len(output.ChildNodes)-1], input)
+		err = parseI(&output.ChildNodes[len(output.ChildNodes)-1], input)
 		if err != nil {
 			return err
 		}
@@ -326,7 +326,7 @@ func parseI7(output common.ASTNode, input <-chan common.Token) error {
 			InnerToken: common.Token{},
 		})
 		movePointerToNextToken(input)
-		err := parseI(output.ChildNodes[len(output.ChildNodes)-1], input)
+		err := parseI(&output.ChildNodes[len(output.ChildNodes)-1], input)
 		if err != nil {
 			return err
 		}
@@ -339,11 +339,12 @@ func parseI7(output common.ASTNode, input <-chan common.Token) error {
 	return errors.New("unexpected parse token in I7")
 }
 
-func parseR(output common.ASTNode, input <-chan common.Token) error {
+func parseR(output *common.ASTNode, input <-chan common.Token) error {
 	if currPointer.TokenKind == common.TokenIdent ||
 		currPointer.TokenKind == common.TokenLiteralInt ||
 		currPointer.TokenKind == common.TokenOpenParanthesis ||
 		currPointer.TokenKind == common.TokenInput {
+		// R -> ER1
 		err := parseE(output, input)
 		if err != nil {
 			return err
@@ -353,11 +354,138 @@ func parseR(output common.ASTNode, input <-chan common.Token) error {
 	return errors.New("unexpected parse token in R")
 }
 
-func parseR1(output common.ASTNode, input <-chan common.Token) error {
-	return nil
+func parseR1(output *common.ASTNode, input <-chan common.Token) error {
+	resultE1 := output.ChildNodes[len(output.ChildNodes)-1].ShallowCopy()
+	if currPointer.TokenKind != common.TokenRelationalLesserThan &&
+		currPointer.TokenKind != common.TokenRelationalGreaterThan &&
+		currPointer.TokenKind != common.TokenRelationalEquals &&
+		currPointer.TokenKind != common.TokenRelationalLesserThanOrEquals &&
+		currPointer.TokenKind != common.TokenRelationalGreaterThanOrEquals &&
+		currPointer.TokenKind != common.TokenRelationalNotEquals {
+		return errors.New("unexpected parse token in R1")
+	}
+	output.ChildNodes[len(output.ChildNodes)-1].IsLeaf = false
+	output.ChildNodes[len(output.ChildNodes)-1].InnerToken.TokenKind = currPointer.TokenKind
+	output.ChildNodes[len(output.ChildNodes)-1].InnerToken.Token = currPointer.Token
+	output.ChildNodes[len(output.ChildNodes)-1].ChildNodes = []common.ASTNode{
+		resultE1,
+	}
+	movePointerToNextToken(input)
+	return parseE(&output.ChildNodes[len(output.ChildNodes)-1], input)
 }
 
-func parseE(output common.ASTNode, input <-chan common.Token) error {
+func parseE(output *common.ASTNode, input <-chan common.Token) error {
+	err := parseT(output, input)
+	if err != nil {
+		return err
+	}
+	return parseE1(output, input)
+}
+
+func parseE1(output *common.ASTNode, input <-chan common.Token) error {
+	if currPointer.TokenKind == common.TokenRelationalLesserThan ||
+		currPointer.TokenKind == common.TokenRelationalGreaterThan ||
+		currPointer.TokenKind == common.TokenRelationalEquals ||
+		currPointer.TokenKind == common.TokenRelationalLesserThanOrEquals ||
+		currPointer.TokenKind == common.TokenRelationalGreaterThanOrEquals ||
+		currPointer.TokenKind == common.TokenRelationalNotEquals ||
+		currPointer.TokenKind == common.TokenCloseParanthesis ||
+		currPointer.TokenKind == common.TokenOpenCurly ||
+		currPointer.TokenKind == common.TokenLineEnd {
+		// E1 -> epsilon
+		return nil
+	}
+	if currPointer.TokenKind == common.TokenExpressionAdd ||
+		currPointer.TokenKind == common.TokenExpressionSub {
+		// E1 -> +TE1 | -TE1
+		resultT := output.ChildNodes[len(output.ChildNodes)-1].ShallowCopy()
+		output.ChildNodes[len(output.ChildNodes)-1].IsLeaf = false
+		output.ChildNodes[len(output.ChildNodes)-1].InnerToken.Token = currPointer.Token
+		output.ChildNodes[len(output.ChildNodes)-1].InnerToken.TokenKind = currPointer.TokenKind
+		output.ChildNodes[len(output.ChildNodes)-1].ChildNodes = []common.ASTNode{
+			resultT,
+		}
+		movePointerToNextToken(input)
+		err := parseT(&output.ChildNodes[len(output.ChildNodes)-1], input)
+		if err != nil {
+			return err
+		}
+		return parseE1(output, input)
+	}
+	return errors.New("unexpected parse token in E1")
+}
+
+func parseT(output *common.ASTNode, input <-chan common.Token) error {
+	err := parseF(output, input)
+	if err != nil {
+		return err
+	}
+	return parseT1(output, input)
+}
+
+func parseT1(output *common.ASTNode, input <-chan common.Token) error {
+	if currPointer.TokenKind == common.TokenRelationalLesserThan ||
+		currPointer.TokenKind == common.TokenRelationalGreaterThan ||
+		currPointer.TokenKind == common.TokenRelationalEquals ||
+		currPointer.TokenKind == common.TokenRelationalLesserThanOrEquals ||
+		currPointer.TokenKind == common.TokenRelationalGreaterThanOrEquals ||
+		currPointer.TokenKind == common.TokenRelationalNotEquals ||
+		currPointer.TokenKind == common.TokenExpressionAdd ||
+		currPointer.TokenKind == common.TokenExpressionSub ||
+		currPointer.TokenKind == common.TokenCloseParanthesis ||
+		currPointer.TokenKind == common.TokenOpenCurly ||
+		currPointer.TokenKind == common.TokenLineEnd {
+		// T1 -> epsilon
+		return nil
+	}
+	if currPointer.TokenKind == common.TokenExpressionMul ||
+		currPointer.TokenKind == common.TokenExpressionDiv ||
+		currPointer.TokenKind == common.TokenExpressionModulo {
+		// T1 -> *FT1 | /FT1 | %FT1
+		resultF := output.ChildNodes[len(output.ChildNodes)-1].ShallowCopy()
+		output.ChildNodes[len(output.ChildNodes)-1].IsLeaf = false
+		output.ChildNodes[len(output.ChildNodes)-1].InnerToken.Token = currPointer.Token
+		output.ChildNodes[len(output.ChildNodes)-1].InnerToken.TokenKind = currPointer.TokenKind
+		output.ChildNodes[len(output.ChildNodes)-1].ChildNodes = []common.ASTNode{
+			resultF,
+		}
+		movePointerToNextToken(input)
+		err := parseF(&output.ChildNodes[len(output.ChildNodes)-1], input)
+		if err != nil {
+			return err
+		}
+		return parseT1(output, input)
+	}
+	return errors.New("unexpected parse token in T1")
+}
+
+func parseF(output *common.ASTNode, input <-chan common.Token) error {
+	if currPointer.TokenKind == common.TokenIdent ||
+		currPointer.TokenKind == common.TokenLiteralInt ||
+		currPointer.TokenKind == common.TokenInput {
+		output.ChildNodes = append(output.ChildNodes, common.ASTNode{
+			IsLeaf: true,
+			InnerToken: common.Token{
+				TokenKind: currPointer.TokenKind,
+				Token:     currPointer.Token,
+			},
+			ChildNodes: []common.ASTNode{},
+		})
+		movePointerToNextToken(input)
+		return nil
+	}
+	if currPointer.TokenKind != common.TokenOpenParanthesis {
+		return errors.New("unexpected parse token in F")
+	}
+	movePointerToNextToken(input)
+	err := parseE(output, input)
+	if err != nil {
+		return err
+	}
+	if currPointer.TokenKind != common.TokenCloseParanthesis {
+		return errors.New("unexpected parse token in F")
+	}
+	movePointerToNextToken(input)
 	return nil
 }
 

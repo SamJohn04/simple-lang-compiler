@@ -1,15 +1,6 @@
 package common
 
-type Token struct {
-	TokenKind TokenKind
-	Token     string
-}
-
-type ASTNode struct {
-	IsLeaf     bool
-	InnerToken Token
-	ChildNodes []ASTNode
-}
+import "fmt"
 
 type TokenKind int
 
@@ -106,4 +97,33 @@ var NameMapWithTokenKind = map[TokenKind]string{
 	TokenError: "Error Token",
 
 	TokenBlock: "Code Block",
+}
+
+type Token struct {
+	TokenKind TokenKind
+	Token     string
+}
+
+type ASTNode struct {
+	IsLeaf     bool
+	InnerToken Token
+	ChildNodes []ASTNode
+}
+
+func (n ASTNode) ShallowCopy() ASTNode {
+	return ASTNode{
+		IsLeaf: n.IsLeaf,
+		InnerToken: Token{
+			TokenKind: n.InnerToken.TokenKind,
+			Token:     n.InnerToken.Token,
+		},
+		ChildNodes: n.ChildNodes,
+	}
+}
+
+func (n ASTNode) Display(start string) {
+	fmt.Println(start, NameMapWithTokenKind[n.InnerToken.TokenKind], n.InnerToken.Token)
+	for _, t := range n.ChildNodes {
+		t.Display(start + "+")
+	}
 }
