@@ -4,27 +4,30 @@ A compiler for a simple language, to help better understand the practical side o
 
 ## Parser
 
-```text
-INS -> I;INS | epsilon
+For this compiler, an LL\(1\) parser has been chosen. The parser uses the following grammar.
 
-I -> variable = E |
-    if R { INS } J |
-    while R { INS } |
+```text
+I -> I1;I | ε
+
+I1 -> variable=E |
+    let I6 |
+    if R { I } I4 |
+    while R { I } |
     output E
 
-J -> else M |
-    epsilon
+I4 -> else I7 | ε
+I7 -> if R { I } J | { I }
 
-M -> if R { INS } J |
-    { INS }
+I6 -> mut variable I3 | variable=E
+I3 -> =E | ε
 
-R -> ER'
-R' -> >E | <E | ==E | !=E | >=E | <=E
+R -> ER1
+R1 -> >E | <E | ==E | !=E | >=E | <=E
 
-E -> TE'
-E' -> +TE' | -TE' | epsilon
-T -> FT'
-T' -> *FT' | /FT' | %FT' | epsilon
+E -> TE1
+E1 -> +TE1 | -TE1 | ε
+T -> FT1
+T1 -> *FT1 | /FT1 | %FT1 | ε
 F -> input | variable | literal | (E)
 ```
 
