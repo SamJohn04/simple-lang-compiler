@@ -7,12 +7,6 @@ import (
 	"github.com/SamJohn04/simple-lang-compiler/internal/common"
 )
 
-/*
-type identRow struct {
-	mutable bool
-}
-*/
-
 var (
 	IdentTable  map[string]bool
 	currPointer common.Token
