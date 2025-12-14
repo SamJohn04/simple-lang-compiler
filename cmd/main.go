@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/SamJohn04/simple-lang-compiler/internal/common"
@@ -16,5 +17,10 @@ func main() {
 	defer file.Close()
 
 	go frontend.Lexer(file, lex)
-	frontend.Parser(lex)
+	programRoot, err := frontend.Parser(lex)
+	if err != nil {
+		fmt.Println("Something went wrong.")
+		os.Exit(1)
+	}
+	programRoot.Display("")
 }

@@ -13,7 +13,8 @@ var (
 )
 
 // Parsing is done using LL(1) method.
-func Parser(input <-chan common.Token) error {
+// Does both the syntax analyzer and semantic analyzer functions
+func Parser(input <-chan common.Token) (common.ASTNode, error) {
 	movePointerToNextToken(input)
 	IdentTable = make(map[string]bool)
 
@@ -28,10 +29,9 @@ func Parser(input <-chan common.Token) error {
 	err := parseI(&output, input)
 	if err != nil {
 		fmt.Printf("error found at %v: %v", currPointer.Token, err)
-		return err
+		return common.ASTNode{}, err
 	}
-	output.Display("")
-	return nil
+	return output, nil
 }
 
 func parseI(output *common.ASTNode, input <-chan common.Token) error {
