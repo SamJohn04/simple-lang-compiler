@@ -104,14 +104,19 @@ type Token struct {
 	Token     string
 }
 
-type ASTNode struct {
-	IsLeaf     bool
-	InnerToken Token
-	ChildNodes []ASTNode
+type GeneratorOutput struct {
+	Result string
+	Err    error
 }
 
-func (n ASTNode) ShallowCopy() ASTNode {
-	return ASTNode{
+type SyntaxTreeNode struct {
+	IsLeaf     bool
+	InnerToken Token
+	ChildNodes []SyntaxTreeNode
+}
+
+func (n SyntaxTreeNode) ShallowCopy() SyntaxTreeNode {
+	return SyntaxTreeNode{
 		IsLeaf: n.IsLeaf,
 		InnerToken: Token{
 			TokenKind: n.InnerToken.TokenKind,
@@ -121,7 +126,7 @@ func (n ASTNode) ShallowCopy() ASTNode {
 	}
 }
 
-func (n ASTNode) Display(start string) {
+func (n SyntaxTreeNode) Display(start string) {
 	fmt.Println(start, NameMapWithTokenKind[n.InnerToken.TokenKind], n.InnerToken.Token)
 	for _, t := range n.ChildNodes {
 		t.Display(start + "+")
