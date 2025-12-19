@@ -9,7 +9,16 @@ const (
 
 	TokenLiteralInt
 
+	TokenLiteralBool   // WARN not implemented yet
+	TokenLiteralChar   // WARN not implemented yet
+	TokenLiteralFloat  // WARN not implemented yet
+	TokenLiteralString // WARN not implemented yet
+
 	TokenAssignment
+
+	TokenOr  // WARN not implemented yet
+	TokenAnd // WARN not implemented yet
+	TokenNot // WARN not implemented yet
 
 	TokenRelationalEquals
 	TokenRelationalNotEquals
@@ -48,7 +57,8 @@ const (
 	TokenEmpty
 	TokenError
 
-	// parser
+	// used by the parser, usually as a grouper
+	// specifics about the information in the Token string
 	TokenBlock
 )
 
@@ -57,7 +67,16 @@ var NameMapWithTokenKind = map[TokenKind]string{
 
 	TokenLiteralInt: "Literal Int",
 
+	TokenLiteralBool:   "Literal Bool",   // WARN not implemented yet
+	TokenLiteralChar:   "Literal Char",   // WARN not implemented yet
+	TokenLiteralFloat:  "Literal Float",  // WARN not implemented yet
+	TokenLiteralString: "Literal String", // WARN not implemented yet
+
 	TokenAssignment: "Assignment",
+
+	TokenOr:  "OR",  // WARN not implemented yet
+	TokenAnd: "AND", // WARN not implemented yet
+	TokenNot: "NOT", // WARN not implemented yet
 
 	TokenRelationalEquals:              "Relational Equals",
 	TokenRelationalNotEquals:           "Relational Not Equals",
