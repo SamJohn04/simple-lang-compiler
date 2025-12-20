@@ -788,6 +788,29 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				childE,
 			},
 		}, nil
+	case common.TokenExpressionSub:
+		childSub := common.SyntaxTreeNode{
+			IsLeaf: true,
+			InnerToken: common.Token{
+				TokenKind: currPointer.TokenKind,
+				Token:     currPointer.Token,
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}
+
+		movePointerToNextToken(input)
+		childF, err := parseF(input)
+		return common.SyntaxTreeNode{
+			IsLeaf: false,
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "F>-F",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childSub,
+				childF,
+			},
+		}, err
 	default:
 		return common.SyntaxTreeNode{}, errors.New("unexpected parse token in F")
 	}

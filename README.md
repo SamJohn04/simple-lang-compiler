@@ -28,7 +28,7 @@ E -> TE1
 E1 -> +TE1 | -TE1 | ε
 T -> FT1
 T1 -> *FT1 | /FT1 | %FT1 | ε
-F -> input | variable | literal | (E)
+F -> input | variable | literal | (E) | -F
 ```
 
 E.g. Program:
