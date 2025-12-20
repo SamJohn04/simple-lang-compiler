@@ -16,13 +16,13 @@ I1 -> variable=E |
     output E
 
 I4 -> else I7 | ε
-I7 -> if R { I } J | { I }
+I7 -> if R { I } I4 | { I }
 
-I6 -> mut variable I3 | variable=E
-I3 -> =E | ε
+I6 -> mut variable I8 | variable=E
+I8 -> =E | ε
 
-R -> ER1
-R1 -> >E | <E | ==E | !=E | >=E | <=E
+R -> ER1E
+R1 -> > | < | == | != | >= | <=
 
 E -> TE1
 E1 -> +TE1 | -TE1 | ε
