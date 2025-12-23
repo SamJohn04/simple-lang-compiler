@@ -19,8 +19,14 @@ func main() {
 	go frontend.Lexer(file, lex)
 	programRoot, err := frontend.Parser(lex)
 	if err != nil {
-		fmt.Println("Something went wrong.")
+		fmt.Println(err)
 		os.Exit(1)
 	}
+	programRoot, err = frontend.TypeChecker(programRoot)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	programRoot.Display("")
 }

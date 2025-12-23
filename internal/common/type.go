@@ -118,6 +118,16 @@ var NameMapWithTokenKind = map[TokenKind]string{
 	TokenBlock: "Code Block",
 }
 
+type DataTypeOfIdentifier int
+
+const (
+	TypedInt DataTypeOfIdentifier = iota + 1
+	TypedBool
+	TypedChar
+	TypedFloat
+	TypedString
+)
+
 type Token struct {
 	TokenKind TokenKind
 	Token     string
@@ -150,4 +160,42 @@ func (n SyntaxTreeNode) Display(start string) {
 	for _, t := range n.ChildNodes {
 		t.Display(start + "+")
 	}
+}
+
+type UnderConstructionError struct {
+	PointOfFailure string
+	Message        string
+}
+
+func (e *UnderConstructionError) Error() string {
+	errMsg := e.PointOfFailure + " is still under construction"
+	if e.Message != "" {
+		errMsg += ": " + e.Message
+	}
+	return errMsg
+}
+
+// This error is returned when something goes wrong with the compiler.
+// This usually points to a mistake from my side.
+type InternalError struct {
+	PointOfFailure string
+	Message        string
+}
+
+func (e *InternalError) Error() string {
+	return "There is something wrong with the compiler.\n" +
+		"It is recommended to contact someone in the language creation team regarding this issue.\n" +
+		"\t" + e.Message + "\n" +
+		"in " + e.PointOfFailure
+}
+
+// This error is returned when something goes wrong with the user input.
+// This usually points to a mistake on the compiled code's side
+type CompilationError struct {
+	PointOfFailure string
+	Message        string
+}
+
+func (e *CompilationError) Error() string {
+	return e.PointOfFailure + ": " + e.Message
 }

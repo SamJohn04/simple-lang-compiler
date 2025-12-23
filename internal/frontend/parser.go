@@ -1,11 +1,6 @@
 package frontend
 
-import (
-	"errors"
-	"fmt"
-
-	"github.com/SamJohn04/simple-lang-compiler/internal/common"
-)
+import "github.com/SamJohn04/simple-lang-compiler/internal/common"
 
 var currPointer common.Token
 
@@ -15,7 +10,6 @@ func Parser(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 
 	output, err := parseI(input)
 	if err != nil {
-		fmt.Printf("error found at %v: %v\n", currPointer.Token, err)
 		return common.SyntaxTreeNode{}, err
 	}
 	return output, nil
@@ -38,7 +32,7 @@ func parseI(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, err
 		}
 		if currPointer.TokenKind != common.TokenLineEnd {
-			return common.SyntaxTreeNode{}, errors.New("end of line (;) expected.")
+			return common.SyntaxTreeNode{}, parserError("end of line (;) expected")
 		}
 		movePointerToNextToken(input)
 		childI, err := parseI(input)
@@ -66,7 +60,7 @@ func parseI(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
 	default:
-		return common.SyntaxTreeNode{}, errors.New("unexpected parse token in I")
+		return common.SyntaxTreeNode{}, parserError("unexpected token")
 	}
 }
 
@@ -85,7 +79,7 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 
 		movePointerToNextToken(input)
 		if currPointer.TokenKind != common.TokenAssignment {
-			return common.SyntaxTreeNode{}, errors.New("'=' expected")
+			return common.SyntaxTreeNode{}, parserError("'=' expected")
 		}
 		childEquals := common.SyntaxTreeNode{
 			IsLeaf: true,
@@ -142,7 +136,7 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}
 
 		if currPointer.TokenKind != common.TokenOpenCurly {
-			return common.SyntaxTreeNode{}, errors.New("'{' expected")
+			return common.SyntaxTreeNode{}, parserError("'{' expected")
 		}
 
 		movePointerToNextToken(input)
@@ -152,7 +146,7 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}
 
 		if currPointer.TokenKind != common.TokenCloseCurly {
-			return common.SyntaxTreeNode{}, errors.New("'}' expected")
+			return common.SyntaxTreeNode{}, parserError("'}' expected")
 		}
 
 		movePointerToNextToken(input)
@@ -191,7 +185,7 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, err
 		}
 		if currPointer.TokenKind != common.TokenOpenCurly {
-			return common.SyntaxTreeNode{}, errors.New("'{' expected")
+			return common.SyntaxTreeNode{}, parserError("'{' expected")
 		}
 
 		movePointerToNextToken(input)
@@ -201,7 +195,7 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}
 
 		if currPointer.TokenKind != common.TokenCloseCurly {
-			return common.SyntaxTreeNode{}, errors.New("'}' expected")
+			return common.SyntaxTreeNode{}, parserError("'}' expected")
 		}
 
 		movePointerToNextToken(input)
@@ -248,7 +242,7 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}
 		return outputBlock, nil
 	default:
-		return common.SyntaxTreeNode{}, errors.New("unexpected parse token in I1")
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I1")
 	}
 }
 
@@ -293,7 +287,7 @@ func parseI4(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
 	default:
-		return common.SyntaxTreeNode{}, errors.New("unexpected parse token in I4; expecting else or ;")
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I4; expecting else or ;")
 	}
 }
 
@@ -312,7 +306,7 @@ func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 
 		movePointerToNextToken(input)
 		if currPointer.TokenKind != common.TokenAssignment {
-			return common.SyntaxTreeNode{}, errors.New("'=' expected")
+			return common.SyntaxTreeNode{}, parserError("'=' expected")
 		}
 		childEquals := common.SyntaxTreeNode{
 			IsLeaf: true,
@@ -350,7 +344,7 @@ func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 
 		movePointerToNextToken(input)
 		if currPointer.TokenKind != common.TokenIdent {
-			return common.SyntaxTreeNode{}, errors.New("variable expected")
+			return common.SyntaxTreeNode{}, parserError("variable expected")
 		}
 
 		childIdent := common.SyntaxTreeNode{
@@ -378,7 +372,7 @@ func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 		}, err
 	default:
-		return common.SyntaxTreeNode{}, errors.New("unexpected parse token in I6")
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I6")
 	}
 }
 
@@ -401,7 +395,7 @@ func parseI7(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, err
 		}
 		if currPointer.TokenKind != common.TokenOpenCurly {
-			return common.SyntaxTreeNode{}, errors.New("'{' expected")
+			return common.SyntaxTreeNode{}, parserError("'{' expected")
 		}
 
 		movePointerToNextToken(input)
@@ -410,7 +404,7 @@ func parseI7(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, err
 		}
 		if currPointer.TokenKind != common.TokenCloseCurly {
-			return common.SyntaxTreeNode{}, errors.New("'}' expected")
+			return common.SyntaxTreeNode{}, parserError("'}' expected")
 		}
 
 		movePointerToNextToken(input)
@@ -438,7 +432,7 @@ func parseI7(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}
 
 		if currPointer.TokenKind != common.TokenCloseCurly {
-			return common.SyntaxTreeNode{}, errors.New("'}' expected")
+			return common.SyntaxTreeNode{}, parserError("'}' expected")
 		}
 		movePointerToNextToken(input)
 
@@ -453,7 +447,7 @@ func parseI7(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 		}, nil
 	default:
-		return common.SyntaxTreeNode{}, errors.New("unexpected parse token in I7")
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I7")
 	}
 }
 
@@ -495,7 +489,7 @@ func parseI8(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 		}, err
 	default:
-		return common.SyntaxTreeNode{}, errors.New("'=' or ';' expected")
+		return common.SyntaxTreeNode{}, parserError("'=' or ';' expected")
 	}
 }
 
@@ -533,7 +527,7 @@ func parseR(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 		}, err
 	default:
-		return common.SyntaxTreeNode{}, errors.New("unexpected parse token in R")
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in R")
 	}
 }
 
@@ -561,7 +555,7 @@ func parseR1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		movePointerToNextToken(input)
 		return child, nil
 	default:
-		return common.SyntaxTreeNode{}, errors.New("unexpected parse token in R1")
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in R1")
 	}
 }
 
@@ -645,7 +639,7 @@ func parseE1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 		}, err
 	default:
-		return common.SyntaxTreeNode{}, errors.New("unexpected parse token in E1")
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in E1")
 	}
 }
 
@@ -736,7 +730,7 @@ func parseT1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 		}, nil
 	default:
-		return common.SyntaxTreeNode{}, errors.New("unexpected parse token in T1")
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in T1")
 	}
 }
 
@@ -774,7 +768,7 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, err
 		}
 		if currPointer.TokenKind != common.TokenCloseParanthesis {
-			return common.SyntaxTreeNode{}, errors.New("unexpected parse token in F")
+			return common.SyntaxTreeNode{}, parserError("unexpected parse token in F")
 		}
 
 		movePointerToNextToken(input)
@@ -812,7 +806,7 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 		}, err
 	default:
-		return common.SyntaxTreeNode{}, errors.New("unexpected parse token in F")
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in F")
 	}
 }
 
@@ -824,5 +818,12 @@ func movePointerToNextToken(input <-chan common.Token) {
 			TokenKind: common.TokenError,
 			Token:     "",
 		}
+	}
+}
+
+func parserError(message string) *common.CompilationError {
+	return &common.CompilationError{
+		PointOfFailure: "Parser",
+		Message:        message + " at " + currPointer.Token,
 	}
 }
