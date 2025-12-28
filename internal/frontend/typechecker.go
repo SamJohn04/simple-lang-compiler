@@ -195,10 +195,7 @@ func checkI1(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 		return childOutput, nil
 
 	default:
-		return input, &common.UnderConstructionError{
-			PointOfFailure: "Type Checker",
-			Message:        fmt.Sprintf("I1 when \"%v\"", input.InnerToken.Token),
-		}
+		return common.SyntaxTreeNode{}, typeCheckerInternalError("I1 does not match")
 	}
 }
 
