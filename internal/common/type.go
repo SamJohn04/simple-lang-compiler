@@ -121,11 +121,14 @@ var NameMapWithTokenKind = map[TokenKind]string{
 type DataTypeOfIdentifier int
 
 const (
-	TypedInt DataTypeOfIdentifier = iota + 1
-	TypedBool
-	TypedChar
-	TypedFloat
-	TypedString
+	TypedInt    DataTypeOfIdentifier = iota + 1
+	TypedBool                        // WARN not implemented yet
+	TypedChar                        // WARN not implemented yet
+	TypedFloat                       // WARN not implemented yet
+	TypedString                      // WARN not implemented yet
+	TypedVoid                        // WARN not implemented yet
+
+	TypedUnkown // What mut variables get typed as, before assignment
 )
 
 type Token struct {

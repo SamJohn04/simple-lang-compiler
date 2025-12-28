@@ -282,7 +282,7 @@ func parseI4(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
-				Token:     "I4>epsilon",
+				Token:     "I4",
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
@@ -459,7 +459,7 @@ func parseI8(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
-				Token:     "I8>epsilon",
+				Token:     "I8",
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
@@ -602,7 +602,7 @@ func parseE1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
-				Token:     "E1>epsilon",
+				Token:     "E1",
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
@@ -691,7 +691,7 @@ func parseT1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
-				Token:     "T1>epsilon",
+				Token:     "T1",
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil

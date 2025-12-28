@@ -21,7 +21,7 @@ func Lexer(reader io.Reader, output chan<- common.Token) {
 	// To denote the end of scanner
 	output <- common.Token{
 		TokenKind: common.TokenEOF,
-		Token:     "",
+		Token:     "end of file",
 	}
 }
 
