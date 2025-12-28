@@ -428,7 +428,87 @@ func checkE(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			),
 		)
 	}
-	return input, nil // TODO change to be more thorough
+
+	childT, err := checkT(input.ChildNodes[0])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+	return checkE1(input.ChildNodes[1], childT)
+}
+
+func checkE1(input, calculationsUntilNow common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	if input.InnerToken.Token == "E1" {
+		return calculationsUntilNow, nil
+	}
+
+	childOperator := input.ChildNodes[0]
+	childT, err := checkT(input.ChildNodes[1])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+
+	childOperator.IsLeaf = false
+	childOperator.ChildNodes = []common.SyntaxTreeNode{
+		calculationsUntilNow,
+		childT,
+	}
+	return checkE1(input.ChildNodes[2], childOperator)
+}
+
+func checkT(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	childF, err := checkF(input.ChildNodes[0])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+	return checkT1(input.ChildNodes[1], childF)
+}
+
+func checkT1(input, calculationsUntilNow common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	if input.InnerToken.Token == "T1" {
+		return calculationsUntilNow, nil
+	}
+
+	childOperator := input.ChildNodes[0]
+	childF, err := checkF(input.ChildNodes[1])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+
+	childOperator.IsLeaf = false
+	childOperator.ChildNodes = []common.SyntaxTreeNode{
+		calculationsUntilNow,
+		childF,
+	}
+	return checkT1(input.ChildNodes[2], childOperator)
+}
+
+func checkF(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	switch input.InnerToken.Token {
+	case "F>-F":
+		childSub := input.ChildNodes[0]
+		childF, err := checkF(input.ChildNodes[1])
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		childSub.IsLeaf = false
+		childSub.ChildNodes = []common.SyntaxTreeNode{
+			childF,
+		}
+		return childSub, nil
+	case "F>(E)":
+		return checkE(input.ChildNodes[0])
+	case "F>id":
+		if input.ChildNodes[0].InnerToken.TokenKind == common.TokenIdent {
+			information, ok := IdentTable[input.ChildNodes[0].InnerToken.Token]
+			if !ok || information.DataType != common.TypedInt { // TODO update typechecking
+				return common.SyntaxTreeNode{}, typeCheckerCompilationError("use of identifier without declaring")
+			}
+		}
+		return input.ChildNodes[0], nil
+	default:
+		return common.SyntaxTreeNode{}, typeCheckerInternalError("F does not match")
+	}
 }
 
 func typeCheckerCompilationError(message string) *common.CompilationError {
