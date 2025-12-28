@@ -101,6 +101,13 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}, err
 	case common.TokenLet:
 		// I1 -> let I6
+		childLet := common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: currPointer.TokenKind,
+				Token:     currPointer.Token,
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}
 		movePointerToNextToken(input)
 		childI6, err := parseI6(input)
 		return common.SyntaxTreeNode{
@@ -109,6 +116,7 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				Token:     "I1>let I6",
 			},
 			ChildNodes: []common.SyntaxTreeNode{
+				childLet,
 				childI6,
 			},
 		}, err

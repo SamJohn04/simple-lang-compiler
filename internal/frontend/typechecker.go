@@ -2,7 +2,6 @@ package frontend
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/SamJohn04/simple-lang-compiler/internal/common"
 )
@@ -24,7 +23,9 @@ func TypeChecker(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 }
 
 func checkI(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	if input.InnerToken.Token == "I" {
+	switch len(input.ChildNodes) {
+	case 0:
+		// epsilon
 		return common.SyntaxTreeNode{
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
@@ -32,52 +33,42 @@ func checkI(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
-	}
 
-	if len(input.ChildNodes) != 2 {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError("I not containing 0 or 2 children")
-	}
+	case 2:
+		// I1;I
+		childI1, err := checkI1(input.ChildNodes[0])
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
 
-	childI1, err := checkI1(input.ChildNodes[0])
-	if err != nil {
-		return common.SyntaxTreeNode{}, err
-	}
+		childI, err := checkI(input.ChildNodes[1])
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
 
-	childI, err := checkI(input.ChildNodes[1])
-	if err != nil {
-		return common.SyntaxTreeNode{}, err
-	}
+		output := common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "I>I1*",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childI1,
+			},
+		}
+		output.ChildNodes = append(output.ChildNodes, childI.ChildNodes...)
+		return output, nil
 
-	output := common.SyntaxTreeNode{
-		InnerToken: common.Token{
-			TokenKind: common.TokenBlock,
-			Token:     "I>I1*",
-		},
-		ChildNodes: []common.SyntaxTreeNode{
-			childI1,
-		},
+	default:
+		return common.SyntaxTreeNode{}, typeCheckerInternalError(
+			fmt.Sprintf("I expects I>I1;I or I, got %v", input.InnerToken.Token),
+		)
 	}
-	output.ChildNodes = append(output.ChildNodes, childI.ChildNodes...)
-	return output, nil
 }
 
 func checkI1(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	inputTokenStringAsBlocks := strings.Split(input.InnerToken.Token, ">")
-	if len(inputTokenStringAsBlocks) != 2 {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError(
-			fmt.Sprintf(
-				"blocksize of I1 is %v, not 2",
-				len(inputTokenStringAsBlocks),
-			),
-		)
-	}
-
-	if inputTokenStringAsBlocks[0] != "I1" {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError("not I1 when expecting I1")
-	}
-
-	switch inputTokenStringAsBlocks[1] {
-	case "v=E":
+	switch input.ChildNodes[0].InnerToken.TokenKind {
+	case common.TokenIdent:
+		// v=E
 		childIdentifier := input.ChildNodes[0]
 		childEquals := input.ChildNodes[1]
 		childE, err := checkE(input.ChildNodes[2])
@@ -126,18 +117,17 @@ func checkI1(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 		*/
 		return childEquals, nil
 
-	case "let I6":
-		if len(input.ChildNodes) != 1 {
-			return common.SyntaxTreeNode{}, typeCheckerInternalError("I1>let I6 does not have 1 child")
-		}
-
-		childI6, err := checkI6(input.ChildNodes[0])
+	case common.TokenLet:
+		// let I6
+		// let is unnecessary for further calculations
+		childI6, err := checkI6(input.ChildNodes[1])
 		if err != nil {
 			return common.SyntaxTreeNode{}, err
 		}
 		return childI6, nil
 
-	case "if R {I} I4":
+	case common.TokenIf:
+		// if R { I } I4
 		childIf := input.ChildNodes[0]
 		childR, err := checkR(input.ChildNodes[1])
 		if err != nil {
@@ -173,7 +163,8 @@ func checkI1(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 		childIf.ChildNodes = append(childIf.ChildNodes, childI4.ChildNodes...)
 		return childIf, nil
 
-	case "while R {I}":
+	case common.TokenWhile:
+		// while R { I }
 		childWhile := input.ChildNodes[0]
 		childR, err := checkR(input.ChildNodes[1])
 		if err != nil {
@@ -190,7 +181,8 @@ func checkI1(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 		}
 		return childWhile, nil
 
-	case "output E":
+	case common.TokenOutput:
+		// output E
 		childOutput := input.ChildNodes[0]
 		childE, err := checkE(input.ChildNodes[1])
 		if err != nil {
@@ -211,12 +203,9 @@ func checkI1(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 }
 
 func checkI4(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	inputTokenStringAsBlocks := strings.Split(input.InnerToken.Token, ">")
-	if inputTokenStringAsBlocks[0] != "I4" {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError("Expecting I4")
-	}
-
-	if len(inputTokenStringAsBlocks) == 1 {
+	switch len(input.ChildNodes) {
+	case 0:
+		// epsilon
 		return common.SyntaxTreeNode{
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
@@ -224,27 +213,28 @@ func checkI4(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
-	}
 
-	if inputTokenStringAsBlocks[1] != "else I7" {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError("I4 does not match")
-	}
+	case 2:
+		// else I7
+		if input.ChildNodes[0].InnerToken.TokenKind != common.TokenElse {
+			return common.SyntaxTreeNode{}, typeCheckerInternalError(
+				fmt.Sprintf(
+					"I7 did not have else; had %v",
+					common.NameMapWithTokenKind[input.ChildNodes[0].InnerToken.TokenKind],
+				),
+			)
+		}
+		return checkI7(input.ChildNodes[1])
 
-	return checkI7(input.ChildNodes[1])
+	default:
+		return common.SyntaxTreeNode{}, typeCheckerInternalError("I7 does not have 0 or 2 children")
+	}
 }
 
 func checkI6(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	inputTokenStringAsBlocks := strings.Split(input.InnerToken.Token, ">")
-	if len(inputTokenStringAsBlocks) != 2 {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError("I6 does not have 2 blocks")
-	}
-
-	if inputTokenStringAsBlocks[0] != "I6" {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError("Expecting I6")
-	}
-
-	switch inputTokenStringAsBlocks[1] {
-	case "v=E":
+	switch input.ChildNodes[0].InnerToken.TokenKind {
+	case common.TokenIdent:
+		// v = E
 		childIdentifier := input.ChildNodes[0]
 		childEquals := input.ChildNodes[1]
 		childE, err := checkE(input.ChildNodes[2])
@@ -270,7 +260,8 @@ func checkI6(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 
 		return childEquals, nil
 
-	case "mut v I8":
+	case common.TokenMutable:
+		// mut v I8
 		// mut is not necessary for further calculations, but serves as a flag
 		childIdentifier := input.ChildNodes[1]
 
@@ -293,9 +284,8 @@ func checkI6(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 }
 
 func checkI7(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	inputTokenStringAsBlocks := strings.Split(input.InnerToken.Token, ">")
-	switch inputTokenStringAsBlocks[1] {
-	case "if R {I} I4":
+	switch input.ChildNodes[0].InnerToken.TokenKind {
+	case common.TokenIf:
 		childIf := input.ChildNodes[0]
 		childR, err := checkR(input.ChildNodes[1])
 		childI, err := checkI(input.ChildNodes[2])
@@ -315,7 +305,7 @@ func checkI7(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 
 		return childIf, nil
 
-	case "{I}":
+	case common.TokenBlock:
 		childI, err := checkI(input.ChildNodes[0])
 		if err != nil {
 			return common.SyntaxTreeNode{}, err
@@ -338,12 +328,8 @@ func checkI7(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 }
 
 func checkI8(input, childIdentifier common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	inputTokenStringAsBlocks := strings.Split(input.InnerToken.Token, ">")
-	if inputTokenStringAsBlocks[0] != "I8" {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError("Expecting I8")
-	}
-
-	if len(inputTokenStringAsBlocks) == 1 {
+	switch len(input.ChildNodes) {
+	case 0:
 		return common.SyntaxTreeNode{
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
@@ -351,28 +337,28 @@ func checkI8(input, childIdentifier common.SyntaxTreeNode) (common.SyntaxTreeNod
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
-	}
 
-	if len(inputTokenStringAsBlocks) > 2 || inputTokenStringAsBlocks[1] != "=E" {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError("I8 error")
-	}
+	case 2:
+		childEquals := input.ChildNodes[0]
+		childE, err := checkE(input.ChildNodes[1])
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
 
-	childEquals := input.ChildNodes[0]
-	childE, err := checkE(input.ChildNodes[1])
-	if err != nil {
-		return common.SyntaxTreeNode{}, err
-	}
+		IdentTable[childIdentifier.InnerToken.Token] = IdentifierInformation{
+			DataType: common.TypedInt,
+			Mutable:  true,
+		}
 
-	IdentTable[childIdentifier.InnerToken.Token] = IdentifierInformation{
-		DataType: common.TypedInt,
-		Mutable:  true,
-	}
+		childEquals.ChildNodes = []common.SyntaxTreeNode{
+			childIdentifier,
+			childE,
+		}
+		return childEquals, nil
 
-	childEquals.ChildNodes = []common.SyntaxTreeNode{
-		childIdentifier,
-		childE,
+	default:
+		return common.SyntaxTreeNode{}, typeCheckerInternalError("I8 does not match")
 	}
-	return childEquals, nil
 }
 
 func checkR(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
@@ -405,24 +391,6 @@ func checkR(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 }
 
 func checkE(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	inputTokenStringAsBlocks := strings.Split(input.InnerToken.Token, ">")
-	if len(inputTokenStringAsBlocks) != 1 {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError(
-			fmt.Sprintf(
-				"blocksize of E is %v, not 1",
-				len(inputTokenStringAsBlocks),
-			),
-		)
-	}
-	if inputTokenStringAsBlocks[0] != "E" {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError(
-			fmt.Sprintf(
-				"expecting E, received %v",
-				inputTokenStringAsBlocks[0],
-			),
-		)
-	}
-
 	childT, err := checkT(input.ChildNodes[0])
 	if err != nil {
 		return common.SyntaxTreeNode{}, err
@@ -431,7 +399,7 @@ func checkE(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 }
 
 func checkE1(input, calculationsUntilNow common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	if input.InnerToken.Token == "E1" {
+	if len(input.ChildNodes) == 0 {
 		return calculationsUntilNow, nil
 	}
 
@@ -457,7 +425,7 @@ func checkT(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 }
 
 func checkT1(input, calculationsUntilNow common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	if input.InnerToken.Token == "T1" {
+	if len(input.ChildNodes) == 0 {
 		return calculationsUntilNow, nil
 	}
 
@@ -475,8 +443,8 @@ func checkT1(input, calculationsUntilNow common.SyntaxTreeNode) (common.SyntaxTr
 }
 
 func checkF(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	switch input.InnerToken.Token {
-	case "F>-F":
+	switch input.ChildNodes[0].InnerToken.TokenKind {
+	case common.TokenExpressionSub:
 		childSub := input.ChildNodes[0]
 		childF, err := checkF(input.ChildNodes[1])
 		if err != nil {
@@ -487,16 +455,21 @@ func checkF(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			childF,
 		}
 		return childSub, nil
-	case "F>(E)":
+
+	case common.TokenBlock:
 		return checkE(input.ChildNodes[0])
-	case "F>id":
-		if input.ChildNodes[0].InnerToken.TokenKind == common.TokenIdent {
-			information, ok := IdentTable[input.ChildNodes[0].InnerToken.Token]
-			if !ok || information.DataType != common.TypedInt { // TODO update typechecking
-				return common.SyntaxTreeNode{}, typeCheckerCompilationError("use of identifier without declaring")
-			}
+
+	case common.TokenIdent:
+		information, ok := IdentTable[input.ChildNodes[0].InnerToken.Token]
+		if !ok || information.DataType != common.TypedInt { // TODO update typechecking
+			return common.SyntaxTreeNode{}, typeCheckerCompilationError("use of identifier without declaring")
 		}
+		fallthrough
+	case common.TokenLiteralInt:
+		fallthrough
+	case common.TokenInput:
 		return input.ChildNodes[0], nil
+
 	default:
 		return common.SyntaxTreeNode{}, typeCheckerInternalError("F does not match")
 	}
