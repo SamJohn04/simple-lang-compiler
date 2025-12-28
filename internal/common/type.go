@@ -142,14 +142,12 @@ type GeneratorOutput struct {
 }
 
 type SyntaxTreeNode struct {
-	IsLeaf     bool
 	InnerToken Token
 	ChildNodes []SyntaxTreeNode
 }
 
 func (n SyntaxTreeNode) ShallowCopy() SyntaxTreeNode {
 	return SyntaxTreeNode{
-		IsLeaf: n.IsLeaf,
 		InnerToken: Token{
 			TokenKind: n.InnerToken.TokenKind,
 			Token:     n.InnerToken.Token,

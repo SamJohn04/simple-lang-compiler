@@ -24,17 +24,8 @@ func TypeChecker(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 }
 
 func checkI(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	inputTokenStringAsBlocks := strings.Split(input.InnerToken.Token, ">")
-	if len(inputTokenStringAsBlocks) == 0 {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError("string Token of input is 0")
-	}
-	if inputTokenStringAsBlocks[0] != "I" {
-		return common.SyntaxTreeNode{}, typeCheckerInternalError("not I when expecting I")
-	}
-
-	if input.IsLeaf {
+	if input.InnerToken.Token == "I" {
 		return common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I",
@@ -58,7 +49,6 @@ func checkI(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 	}
 
 	output := common.SyntaxTreeNode{
-		IsLeaf: false,
 		InnerToken: common.Token{
 			TokenKind: common.TokenBlock,
 			Token:     "I>I1*",
@@ -119,7 +109,6 @@ func checkI1(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			}
 		}
 
-		childEquals.IsLeaf = false
 		childEquals.ChildNodes = []common.SyntaxTreeNode{
 			childIdentifier,
 			childE,
@@ -177,7 +166,6 @@ func checkI1(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 				R I R I ...
 		*/
 
-		childIf.IsLeaf = false
 		childIf.ChildNodes = []common.SyntaxTreeNode{
 			childR,
 			childI,
@@ -196,7 +184,6 @@ func checkI1(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, err
 		}
 
-		childWhile.IsLeaf = false
 		childWhile.ChildNodes = []common.SyntaxTreeNode{
 			childR,
 			childI,
@@ -210,7 +197,6 @@ func checkI1(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, err
 		}
 
-		childOutput.IsLeaf = false
 		childOutput.ChildNodes = []common.SyntaxTreeNode{
 			childE,
 		}
@@ -232,7 +218,6 @@ func checkI4(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 
 	if len(inputTokenStringAsBlocks) == 1 {
 		return common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "noop",
@@ -278,7 +263,6 @@ func checkI6(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			Mutable:  false,
 		}
 
-		childEquals.IsLeaf = false
 		childEquals.ChildNodes = []common.SyntaxTreeNode{
 			childIdentifier,
 			childE,
@@ -323,7 +307,6 @@ func checkI7(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, err
 		}
 
-		childIf.IsLeaf = false
 		childIf.ChildNodes = []common.SyntaxTreeNode{
 			childR,
 			childI,
@@ -340,7 +323,6 @@ func checkI7(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 
 		// Preventing removal of I block when expended
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "end of if",
@@ -363,7 +345,6 @@ func checkI8(input, childIdentifier common.SyntaxTreeNode) (common.SyntaxTreeNod
 
 	if len(inputTokenStringAsBlocks) == 1 {
 		return common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "noop",
@@ -387,7 +368,6 @@ func checkI8(input, childIdentifier common.SyntaxTreeNode) (common.SyntaxTreeNod
 		Mutable:  true,
 	}
 
-	childEquals.IsLeaf = false
 	childEquals.ChildNodes = []common.SyntaxTreeNode{
 		childIdentifier,
 		childE,
@@ -417,7 +397,6 @@ func checkR(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 		return common.SyntaxTreeNode{}, err
 	}
 
-	childOperator.IsLeaf = false
 	childOperator.ChildNodes = []common.SyntaxTreeNode{
 		firstChildE,
 		secondChildE,
@@ -462,7 +441,6 @@ func checkE1(input, calculationsUntilNow common.SyntaxTreeNode) (common.SyntaxTr
 		return common.SyntaxTreeNode{}, err
 	}
 
-	childOperator.IsLeaf = false
 	childOperator.ChildNodes = []common.SyntaxTreeNode{
 		calculationsUntilNow,
 		childT,
@@ -489,7 +467,6 @@ func checkT1(input, calculationsUntilNow common.SyntaxTreeNode) (common.SyntaxTr
 		return common.SyntaxTreeNode{}, err
 	}
 
-	childOperator.IsLeaf = false
 	childOperator.ChildNodes = []common.SyntaxTreeNode{
 		calculationsUntilNow,
 		childF,
@@ -506,7 +483,6 @@ func checkF(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, err
 		}
 
-		childSub.IsLeaf = false
 		childSub.ChildNodes = []common.SyntaxTreeNode{
 			childF,
 		}

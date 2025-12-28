@@ -37,7 +37,6 @@ func parseI(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		movePointerToNextToken(input)
 		childI, err := parseI(input)
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I>I1;I",
@@ -52,7 +51,6 @@ func parseI(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenCloseCurly:
 		// I -> epsilon
 		return common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I",
@@ -69,7 +67,6 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenIdent:
 		// I1 -> v=E
 		childIdent := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
@@ -82,7 +79,6 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, parserError("'=' expected")
 		}
 		childEquals := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
@@ -93,7 +89,6 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		movePointerToNextToken(input)
 		childE, err := parseE(input)
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I1>v=E",
@@ -109,7 +104,6 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		movePointerToNextToken(input)
 		childI6, err := parseI6(input)
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I1>let I6",
@@ -121,7 +115,6 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenIf:
 		// I1 -> if R { I } I4
 		childIf := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenIf,
 				Token:     "if",
@@ -156,7 +149,6 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}
 
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I1>if R {I} I4",
@@ -171,7 +163,6 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenWhile:
 		// I1 -> while R { I }
 		childWhile := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenWhile,
 				Token:     "while",
@@ -201,7 +192,6 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		movePointerToNextToken(input)
 
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I1>while R {I}",
@@ -215,7 +205,6 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenOutput:
 		// I1 -> output E
 		childOutput := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenOutput,
 				Token:     "output",
@@ -230,7 +219,6 @@ func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}
 
 		outputBlock := common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I1>output E",
@@ -251,7 +239,6 @@ func parseI4(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenElse:
 		// I4 -> else I7
 		childElse := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenElse,
 				Token:     "else",
@@ -266,7 +253,6 @@ func parseI4(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}
 
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I4>else I7",
@@ -279,7 +265,6 @@ func parseI4(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenLineEnd:
 		// I4 -> epsilon
 		return common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I4",
@@ -296,7 +281,6 @@ func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenIdent:
 		// I6 -> v=E
 		childIdent := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
@@ -309,7 +293,6 @@ func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, parserError("'=' expected")
 		}
 		childEquals := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
@@ -320,7 +303,6 @@ func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		movePointerToNextToken(input)
 		childE, err := parseE(input)
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I6>v=E",
@@ -334,7 +316,6 @@ func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenMutable:
 		// I6 -> mut v I8
 		childMut := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
@@ -348,7 +329,6 @@ func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}
 
 		childIdent := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
@@ -360,7 +340,6 @@ func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		childI8, err := parseI8(input)
 
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I6>mut v I8",
@@ -381,7 +360,6 @@ func parseI7(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenIf:
 		// I7 -> if R { I } I4
 		childIf := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
@@ -411,7 +389,6 @@ func parseI7(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		childI4, err := parseI4(input)
 
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I7>if R {I} I4",
@@ -437,7 +414,6 @@ func parseI7(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		movePointerToNextToken(input)
 
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I7>{I}",
@@ -456,7 +432,6 @@ func parseI8(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenLineEnd:
 		// I8 -> epsilon
 		return common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I8",
@@ -466,7 +441,6 @@ func parseI8(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenAssignment:
 		// I8 -> = E
 		childEquals := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenAssignment,
 				Token:     "=",
@@ -478,7 +452,6 @@ func parseI8(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		childE, err := parseE(input)
 
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "I8>=E",
@@ -515,7 +488,6 @@ func parseR(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 
 		childENumber2, err := parseE(input)
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "R>E R1 E",
@@ -545,7 +517,6 @@ func parseR1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		fallthrough
 	case common.TokenRelationalNotEquals:
 		child := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
@@ -566,7 +537,6 @@ func parseE(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	}
 	childE1, err := parseE1(input)
 	return common.SyntaxTreeNode{
-		IsLeaf: false,
 		InnerToken: common.Token{
 			TokenKind: common.TokenBlock,
 			Token:     "E",
@@ -599,7 +569,6 @@ func parseE1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenLineEnd:
 		// E1 -> epsilon
 		return common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "E1",
@@ -611,7 +580,6 @@ func parseE1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenExpressionSub:
 		// E1 -> +TE1 | -TE1
 		childArithmeticOperator := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
@@ -627,7 +595,6 @@ func parseE1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 
 		childE1, err := parseE1(input)
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "E1>opTE1",
@@ -651,7 +618,6 @@ func parseT(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 
 	childT1, err := parseT1(input)
 	return common.SyntaxTreeNode{
-		IsLeaf: false,
 		InnerToken: common.Token{
 			TokenKind: common.TokenBlock,
 			Token:     "T",
@@ -688,7 +654,6 @@ func parseT1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenExpressionSub:
 		// T1 -> epsilon
 		return common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "T1",
@@ -702,7 +667,6 @@ func parseT1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenExpressionModulo:
 		// T1 -> *FT1 | /FT1 | %FT1
 		childArithmeticOperator := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
@@ -718,7 +682,6 @@ func parseT1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 
 		childT1, err := parseT1(input)
 		return common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "T1>opFT1",
@@ -742,7 +705,6 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		fallthrough
 	case common.TokenInput:
 		child := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
@@ -752,7 +714,6 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 
 		movePointerToNextToken(input)
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "F>id",
@@ -773,7 +734,6 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 
 		movePointerToNextToken(input)
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "F>(E)",
@@ -784,7 +744,6 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}, nil
 	case common.TokenExpressionSub:
 		childSub := common.SyntaxTreeNode{
-			IsLeaf: true,
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
@@ -795,7 +754,6 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		movePointerToNextToken(input)
 		childF, err := parseF(input)
 		return common.SyntaxTreeNode{
-			IsLeaf: false,
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
 				Token:     "F>-F",
