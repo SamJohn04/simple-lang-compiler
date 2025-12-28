@@ -333,7 +333,22 @@ func checkI7(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 		return childIf, nil
 
 	case "{I}":
-		return checkI(input.ChildNodes[0])
+		childI, err := checkI(input.ChildNodes[0])
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		// Preventing removal of I block when expended
+		return common.SyntaxTreeNode{
+			IsLeaf: false,
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "end of if",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childI,
+			},
+		}, nil
 
 	default:
 		return common.SyntaxTreeNode{}, typeCheckerInternalError("I7 does not match")
