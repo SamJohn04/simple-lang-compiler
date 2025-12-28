@@ -8,14 +8,14 @@ var currPointer common.Token
 func Parser(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	movePointerToNextToken(input)
 
-	output, err := parseI(input)
+	output, err := parseProgram(input)
 	if err != nil {
 		return common.SyntaxTreeNode{}, err
 	}
 	return output, nil
 }
 
-func parseI(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+func parseProgram(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	switch currPointer.TokenKind {
 	case common.TokenIdent:
 		fallthrough
@@ -27,15 +27,17 @@ func parseI(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		fallthrough
 	case common.TokenOutput:
 		// I -> I1;I
-		childI1, err := parseI1(input)
+		childI1, err := parseNextInstruction(input)
 		if err != nil {
 			return common.SyntaxTreeNode{}, err
 		}
+
 		if currPointer.TokenKind != common.TokenLineEnd {
 			return common.SyntaxTreeNode{}, parserError("end of line (;) expected")
 		}
+
 		movePointerToNextToken(input)
-		childI, err := parseI(input)
+		childI, err := parseProgram(input)
 		return common.SyntaxTreeNode{
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
@@ -46,6 +48,7 @@ func parseI(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				childI,
 			},
 		}, err
+
 	case common.TokenEOF:
 		fallthrough
 	case common.TokenCloseCurly:
@@ -57,234 +60,101 @@ func parseI(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
+
 	default:
 		return common.SyntaxTreeNode{}, parserError("unexpected token")
 	}
 }
 
-func parseI1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+func parseNextInstruction(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	switch currPointer.TokenKind {
 	case common.TokenIdent:
 		// I1 -> v=E
-		childIdent := common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: currPointer.TokenKind,
-				Token:     currPointer.Token,
-			},
-			ChildNodes: []common.SyntaxTreeNode{},
-		}
+		return parseReassignment(input)
 
-		movePointerToNextToken(input)
-		if currPointer.TokenKind != common.TokenAssignment {
-			return common.SyntaxTreeNode{}, parserError("'=' expected")
-		}
-		childEquals := common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: currPointer.TokenKind,
-				Token:     currPointer.Token,
-			},
-			ChildNodes: []common.SyntaxTreeNode{},
-		}
-
-		movePointerToNextToken(input)
-		childE, err := parseE(input)
-		return common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenBlock,
-				Token:     "I1>v=E",
-			},
-			ChildNodes: []common.SyntaxTreeNode{
-				childIdent,
-				childEquals,
-				childE,
-			},
-		}, err
 	case common.TokenLet:
 		// I1 -> let I6
-		childLet := common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: currPointer.TokenKind,
-				Token:     currPointer.Token,
-			},
-			ChildNodes: []common.SyntaxTreeNode{},
-		}
-		movePointerToNextToken(input)
-		childI6, err := parseI6(input)
-		return common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenBlock,
-				Token:     "I1>let I6",
-			},
-			ChildNodes: []common.SyntaxTreeNode{
-				childLet,
-				childI6,
-			},
-		}, err
+		return parseAssignment(input)
+
 	case common.TokenIf:
 		// I1 -> if R { I } I4
-		childIf := common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenIf,
-				Token:     "if",
-			},
-			ChildNodes: []common.SyntaxTreeNode{},
-		}
+		return parseIf(input)
 
-		movePointerToNextToken(input)
-		childR, err := parseR(input)
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		if currPointer.TokenKind != common.TokenOpenCurly {
-			return common.SyntaxTreeNode{}, parserError("'{' expected")
-		}
-
-		movePointerToNextToken(input)
-		childI, err := parseI(input)
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		if currPointer.TokenKind != common.TokenCloseCurly {
-			return common.SyntaxTreeNode{}, parserError("'}' expected")
-		}
-
-		movePointerToNextToken(input)
-		childI4, err := parseI4(input)
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		return common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenBlock,
-				Token:     "I1>if R {I} I4",
-			},
-			ChildNodes: []common.SyntaxTreeNode{
-				childIf,
-				childR,
-				childI,
-				childI4,
-			},
-		}, nil
 	case common.TokenWhile:
 		// I1 -> while R { I }
-		childWhile := common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenWhile,
-				Token:     "while",
-			},
-			ChildNodes: []common.SyntaxTreeNode{},
-		}
+		return parseWhile(input)
 
-		movePointerToNextToken(input)
-		childR, err := parseR(input)
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-		if currPointer.TokenKind != common.TokenOpenCurly {
-			return common.SyntaxTreeNode{}, parserError("'{' expected")
-		}
-
-		movePointerToNextToken(input)
-		childI, err := parseI(input)
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		if currPointer.TokenKind != common.TokenCloseCurly {
-			return common.SyntaxTreeNode{}, parserError("'}' expected")
-		}
-
-		movePointerToNextToken(input)
-
-		return common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenBlock,
-				Token:     "I1>while R {I}",
-			},
-			ChildNodes: []common.SyntaxTreeNode{
-				childWhile,
-				childR,
-				childI,
-			},
-		}, nil
 	case common.TokenOutput:
 		// I1 -> output E
-		childOutput := common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenOutput,
-				Token:     "output",
-			},
-			ChildNodes: []common.SyntaxTreeNode{},
-		}
+		return parseOutput(input)
 
-		movePointerToNextToken(input)
-		childE, err := parseE(input)
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		outputBlock := common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenBlock,
-				Token:     "I1>output E",
-			},
-			ChildNodes: []common.SyntaxTreeNode{
-				childOutput,
-				childE,
-			},
-		}
-		return outputBlock, nil
 	default:
 		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I1")
 	}
 }
 
-func parseI4(input <-chan common.Token) (common.SyntaxTreeNode, error) {
-	switch currPointer.TokenKind {
-	case common.TokenElse:
-		// I4 -> else I7
-		childElse := common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenElse,
-				Token:     "else",
-			},
-			ChildNodes: []common.SyntaxTreeNode{},
-		}
-
-		movePointerToNextToken(input)
-		childI7, err := parseI7(input)
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		return common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenBlock,
-				Token:     "I4>else I7",
-			},
-			ChildNodes: []common.SyntaxTreeNode{
-				childElse,
-				childI7,
-			},
-		}, nil
-	case common.TokenLineEnd:
-		// I4 -> epsilon
-		return common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenBlock,
-				Token:     "I4",
-			},
-			ChildNodes: []common.SyntaxTreeNode{},
-		}, nil
-	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I4; expecting else or ;")
+func parseReassignment(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+	// I1 -> v=E
+	childIdent := common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: currPointer.TokenKind,
+			Token:     currPointer.Token,
+		},
+		ChildNodes: []common.SyntaxTreeNode{},
 	}
+
+	movePointerToNextToken(input)
+	if currPointer.TokenKind != common.TokenAssignment {
+		return common.SyntaxTreeNode{}, parserError("'=' expected")
+	}
+	childEquals := common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: currPointer.TokenKind,
+			Token:     currPointer.Token,
+		},
+		ChildNodes: []common.SyntaxTreeNode{},
+	}
+
+	movePointerToNextToken(input)
+	childE, err := parseE(input)
+	return common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: common.TokenBlock,
+			Token:     "I1>v=E",
+		},
+		ChildNodes: []common.SyntaxTreeNode{
+			childIdent,
+			childEquals,
+			childE,
+		},
+	}, err
 }
 
-func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+func parseAssignment(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+	// I1 -> let I6
+	childLet := common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: currPointer.TokenKind,
+			Token:     currPointer.Token,
+		},
+		ChildNodes: []common.SyntaxTreeNode{},
+	}
+
+	movePointerToNextToken(input)
+	childI6, err := parseAssignmentAfterLet(input)
+	return common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: common.TokenBlock,
+			Token:     "I1>let I6",
+		},
+		ChildNodes: []common.SyntaxTreeNode{
+			childLet,
+			childI6,
+		},
+	}, err
+}
+
+func parseAssignmentAfterLet(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	switch currPointer.TokenKind {
 	case common.TokenIdent:
 		// I6 -> v=E
@@ -321,6 +191,7 @@ func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				childE,
 			},
 		}, err
+
 	case common.TokenMutable:
 		// I6 -> mut v I8
 		childMut := common.SyntaxTreeNode{
@@ -345,7 +216,7 @@ func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}
 
 		movePointerToNextToken(input)
-		childI8, err := parseI8(input)
+		childI8, err := parseMutableAssignment(input)
 
 		return common.SyntaxTreeNode{
 			InnerToken: common.Token{
@@ -358,84 +229,13 @@ func parseI6(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				childI8,
 			},
 		}, err
+
 	default:
 		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I6")
 	}
 }
 
-func parseI7(input <-chan common.Token) (common.SyntaxTreeNode, error) {
-	switch currPointer.TokenKind {
-	case common.TokenIf:
-		// I7 -> if R { I } I4
-		childIf := common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: currPointer.TokenKind,
-				Token:     currPointer.Token,
-			},
-			ChildNodes: []common.SyntaxTreeNode{},
-		}
-
-		movePointerToNextToken(input)
-		childR, err := parseR(input)
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-		if currPointer.TokenKind != common.TokenOpenCurly {
-			return common.SyntaxTreeNode{}, parserError("'{' expected")
-		}
-
-		movePointerToNextToken(input)
-		childI, err := parseI(input)
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-		if currPointer.TokenKind != common.TokenCloseCurly {
-			return common.SyntaxTreeNode{}, parserError("'}' expected")
-		}
-
-		movePointerToNextToken(input)
-		childI4, err := parseI4(input)
-
-		return common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenBlock,
-				Token:     "I7>if R {I} I4",
-			},
-			ChildNodes: []common.SyntaxTreeNode{
-				childIf,
-				childR,
-				childI,
-				childI4,
-			},
-		}, err
-	case common.TokenOpenCurly:
-		// I7 -> { I }
-		movePointerToNextToken(input)
-		childI, err := parseI(input)
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		if currPointer.TokenKind != common.TokenCloseCurly {
-			return common.SyntaxTreeNode{}, parserError("'}' expected")
-		}
-		movePointerToNextToken(input)
-
-		return common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenBlock,
-				Token:     "I7>{I}",
-			},
-			ChildNodes: []common.SyntaxTreeNode{
-				childI,
-			},
-		}, nil
-	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I7")
-	}
-}
-
-func parseI8(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+func parseMutableAssignment(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	switch currPointer.TokenKind {
 	case common.TokenLineEnd:
 		// I8 -> epsilon
@@ -446,6 +246,7 @@ func parseI8(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
+
 	case common.TokenAssignment:
 		// I8 -> = E
 		childEquals := common.SyntaxTreeNode{
@@ -469,9 +270,247 @@ func parseI8(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				childE,
 			},
 		}, err
+
 	default:
 		return common.SyntaxTreeNode{}, parserError("'=' or ';' expected")
 	}
+}
+
+func parseIf(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+	// I1 -> if R { I } I4
+	childIf := common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: common.TokenIf,
+			Token:     "if",
+		},
+		ChildNodes: []common.SyntaxTreeNode{},
+	}
+
+	movePointerToNextToken(input)
+	childR, err := parseR(input)
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+
+	if currPointer.TokenKind != common.TokenOpenCurly {
+		return common.SyntaxTreeNode{}, parserError("'{' expected")
+	}
+
+	movePointerToNextToken(input)
+	childI, err := parseProgram(input)
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+
+	if currPointer.TokenKind != common.TokenCloseCurly {
+		return common.SyntaxTreeNode{}, parserError("'}' expected")
+	}
+
+	movePointerToNextToken(input)
+	childI4, err := parseElseCondition(input)
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+
+	return common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: common.TokenBlock,
+			Token:     "I1>if R {I} I4",
+		},
+		ChildNodes: []common.SyntaxTreeNode{
+			childIf,
+			childR,
+			childI,
+			childI4,
+		},
+	}, nil
+}
+
+func parseElseCondition(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+	switch currPointer.TokenKind {
+	case common.TokenElse:
+		// I4 -> else I7
+		childElse := common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenElse,
+				Token:     "else",
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}
+
+		movePointerToNextToken(input)
+		childI7, err := parseElseIf(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "I4>else I7",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childElse,
+				childI7,
+			},
+		}, nil
+	case common.TokenLineEnd:
+		// I4 -> epsilon
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "I4",
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}, nil
+	default:
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I4; expecting else or ;")
+	}
+}
+
+func parseElseIf(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+	switch currPointer.TokenKind {
+	case common.TokenIf:
+		// I7 -> if R { I } I4
+		childIf := common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: currPointer.TokenKind,
+				Token:     currPointer.Token,
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}
+
+		movePointerToNextToken(input)
+		childR, err := parseR(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+		if currPointer.TokenKind != common.TokenOpenCurly {
+			return common.SyntaxTreeNode{}, parserError("'{' expected")
+		}
+
+		movePointerToNextToken(input)
+		childI, err := parseProgram(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+		if currPointer.TokenKind != common.TokenCloseCurly {
+			return common.SyntaxTreeNode{}, parserError("'}' expected")
+		}
+
+		movePointerToNextToken(input)
+		childI4, err := parseElseCondition(input)
+
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "I7>if R {I} I4",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childIf,
+				childR,
+				childI,
+				childI4,
+			},
+		}, err
+	case common.TokenOpenCurly:
+		// I7 -> { I }
+		movePointerToNextToken(input)
+		childI, err := parseProgram(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		if currPointer.TokenKind != common.TokenCloseCurly {
+			return common.SyntaxTreeNode{}, parserError("'}' expected")
+		}
+		movePointerToNextToken(input)
+
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "I7>{I}",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childI,
+			},
+		}, nil
+	default:
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I7")
+	}
+}
+
+func parseWhile(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+	// I1 -> while R { I }
+	childWhile := common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: common.TokenWhile,
+			Token:     "while",
+		},
+		ChildNodes: []common.SyntaxTreeNode{},
+	}
+
+	movePointerToNextToken(input)
+	childR, err := parseR(input)
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+	if currPointer.TokenKind != common.TokenOpenCurly {
+		return common.SyntaxTreeNode{}, parserError("'{' expected")
+	}
+
+	movePointerToNextToken(input)
+	childI, err := parseProgram(input)
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+
+	if currPointer.TokenKind != common.TokenCloseCurly {
+		return common.SyntaxTreeNode{}, parserError("'}' expected")
+	}
+
+	movePointerToNextToken(input)
+
+	return common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: common.TokenBlock,
+			Token:     "I1>while R {I}",
+		},
+		ChildNodes: []common.SyntaxTreeNode{
+			childWhile,
+			childR,
+			childI,
+		},
+	}, nil
+}
+
+func parseOutput(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+	// I1 -> output E
+	childOutput := common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: common.TokenOutput,
+			Token:     "output",
+		},
+		ChildNodes: []common.SyntaxTreeNode{},
+	}
+
+	movePointerToNextToken(input)
+	childE, err := parseE(input)
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+
+	outputBlock := common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: common.TokenBlock,
+			Token:     "I1>output E",
+		},
+		ChildNodes: []common.SyntaxTreeNode{
+			childOutput,
+			childE,
+		},
+	}
+	return outputBlock, nil
 }
 
 func parseR(input <-chan common.Token) (common.SyntaxTreeNode, error) {
