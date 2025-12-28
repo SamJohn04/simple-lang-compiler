@@ -15,14 +15,14 @@ var IdentTable map[string]IdentifierInformation
 
 func TypeChecker(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 	IdentTable = make(map[string]IdentifierInformation)
-	output, err := checkI(input)
+	output, err := checkProgram(input)
 	if err != nil {
 		return common.SyntaxTreeNode{}, err
 	}
 	return output, nil
 }
 
-func checkI(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+func checkProgram(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 	switch len(input.ChildNodes) {
 	case 0:
 		// epsilon
@@ -36,12 +36,12 @@ func checkI(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 
 	case 2:
 		// I1;I
-		childI1, err := checkI1(input.ChildNodes[0])
+		childI1, err := checkNextInstruction(input.ChildNodes[0])
 		if err != nil {
 			return common.SyntaxTreeNode{}, err
 		}
 
-		childI, err := checkI(input.ChildNodes[1])
+		childI, err := checkProgram(input.ChildNodes[1])
 		if err != nil {
 			return common.SyntaxTreeNode{}, err
 		}
@@ -65,170 +65,95 @@ func checkI(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 	}
 }
 
-func checkI1(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+func checkNextInstruction(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 	switch input.ChildNodes[0].InnerToken.TokenKind {
 	case common.TokenIdent:
 		// v=E
-		childIdentifier := input.ChildNodes[0]
-		childEquals := input.ChildNodes[1]
-		childE, err := checkE(input.ChildNodes[2])
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		information, ok := IdentTable[childIdentifier.InnerToken.Token]
-		if !ok {
-			return common.SyntaxTreeNode{}, typeCheckerCompilationError(
-				fmt.Sprintf(
-					"Identifier %v has not been declared",
-					childIdentifier.InnerToken.Token,
-				),
-			)
-		} else if !information.Mutable {
-			return common.SyntaxTreeNode{}, typeCheckerCompilationError(
-				fmt.Sprintf(
-					"Identifier %v was not marked as mutable (mut keyword) and was reassigned",
-					childIdentifier.InnerToken.Token,
-				),
-			)
-		}
-
-		if information.DataType == common.TypedUnkown {
-			IdentTable[childIdentifier.InnerToken.Token] = IdentifierInformation{
-				DataType: common.TypedInt, // TODO check E
-				Mutable:  true,
-			}
-		}
-
-		childEquals.ChildNodes = []common.SyntaxTreeNode{
-			childIdentifier,
-			childE,
-		}
-
-		/*
-			Essentially going from
-				I1
-				| \  \
-				id =  E
-			To
-				=
-				| \
-				id E
-		*/
-		return childEquals, nil
+		return checkReassignment(input)
 
 	case common.TokenLet:
 		// let I6
-		// let is unnecessary for further calculations
-		childI6, err := checkI6(input.ChildNodes[1])
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-		return childI6, nil
+		return checkAssignment(input)
 
 	case common.TokenIf:
 		// if R { I } I4
-		childIf := input.ChildNodes[0]
-		childR, err := checkR(input.ChildNodes[1])
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-		childI, err := checkI(input.ChildNodes[2])
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-		childI4, err := checkI4(input.ChildNodes[3])
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		/*
-			Converts
-				I1
-				| \ \ \
-				if R I I4
-					   |    \
-					   else I7
-							...
-			to
-				if
-				|\ \ \
-				R I R I ...
-		*/
-
-		childIf.ChildNodes = []common.SyntaxTreeNode{
-			childR,
-			childI,
-		}
-		childIf.ChildNodes = append(childIf.ChildNodes, childI4.ChildNodes...)
-		return childIf, nil
+		return checkIf(input)
 
 	case common.TokenWhile:
 		// while R { I }
-		childWhile := input.ChildNodes[0]
-		childR, err := checkR(input.ChildNodes[1])
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-		childI, err := checkI(input.ChildNodes[2])
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		childWhile.ChildNodes = []common.SyntaxTreeNode{
-			childR,
-			childI,
-		}
-		return childWhile, nil
+		return checkWhile(input)
 
 	case common.TokenOutput:
 		// output E
-		childOutput := input.ChildNodes[0]
-		childE, err := checkE(input.ChildNodes[1])
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		childOutput.ChildNodes = []common.SyntaxTreeNode{
-			childE,
-		}
-		return childOutput, nil
+		return checkOutput(input)
 
 	default:
 		return common.SyntaxTreeNode{}, typeCheckerInternalError("I1 does not match")
 	}
 }
 
-func checkI4(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	switch len(input.ChildNodes) {
-	case 0:
-		// epsilon
-		return common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenBlock,
-				Token:     "noop",
-			},
-			ChildNodes: []common.SyntaxTreeNode{},
-		}, nil
-
-	case 2:
-		// else I7
-		if input.ChildNodes[0].InnerToken.TokenKind != common.TokenElse {
-			return common.SyntaxTreeNode{}, typeCheckerInternalError(
-				fmt.Sprintf(
-					"I7 did not have else; had %v",
-					common.NameMapWithTokenKind[input.ChildNodes[0].InnerToken.TokenKind],
-				),
-			)
-		}
-		return checkI7(input.ChildNodes[1])
-
-	default:
-		return common.SyntaxTreeNode{}, typeCheckerInternalError("I7 does not have 0 or 2 children")
+func checkReassignment(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	// v=E
+	childIdentifier := input.ChildNodes[0]
+	childEquals := input.ChildNodes[1]
+	childE, err := checkE(input.ChildNodes[2])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
 	}
+
+	information, ok := IdentTable[childIdentifier.InnerToken.Token]
+	if !ok {
+		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
+			fmt.Sprintf(
+				"Identifier %v has not been declared",
+				childIdentifier.InnerToken.Token,
+			),
+		)
+	} else if !information.Mutable {
+		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
+			fmt.Sprintf(
+				"Identifier %v was not marked as mutable (mut keyword) and was reassigned",
+				childIdentifier.InnerToken.Token,
+			),
+		)
+	}
+
+	if information.DataType == common.TypedUnkown {
+		IdentTable[childIdentifier.InnerToken.Token] = IdentifierInformation{
+			DataType: common.TypedInt, // TODO check E
+			Mutable:  true,
+		}
+	}
+
+	childEquals.ChildNodes = []common.SyntaxTreeNode{
+		childIdentifier,
+		childE,
+	}
+
+	/*
+		Essentially going from
+			I1
+			| \  \
+			id =  E
+		To
+			=
+			| \
+			id E
+	*/
+	return childEquals, nil
 }
 
-func checkI6(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+func checkAssignment(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	// let I6
+	// let is unnecessary for further calculations
+	childI6, err := checkAssignmentAfterLet(input.ChildNodes[1])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+	return childI6, nil
+}
+
+func checkAssignmentAfterLet(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 	switch input.ChildNodes[0].InnerToken.TokenKind {
 	case common.TokenIdent:
 		// v = E
@@ -273,58 +198,14 @@ func checkI6(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			Mutable:  true,
 		}
 
-		return checkI8(input.ChildNodes[2], childIdentifier)
+		return checkMutableAssignment(input.ChildNodes[2], childIdentifier)
 
 	default:
 		return common.SyntaxTreeNode{}, typeCheckerInternalError("I6 does not match")
 	}
 }
 
-func checkI7(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	switch input.ChildNodes[0].InnerToken.TokenKind {
-	case common.TokenIf:
-		childIf := input.ChildNodes[0]
-		childR, err := checkR(input.ChildNodes[1])
-		childI, err := checkI(input.ChildNodes[2])
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-		childI4, err := checkI4(input.ChildNodes[3])
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		childIf.ChildNodes = []common.SyntaxTreeNode{
-			childR,
-			childI,
-		}
-		childIf.ChildNodes = append(childIf.ChildNodes, childI4.ChildNodes...)
-
-		return childIf, nil
-
-	case common.TokenBlock:
-		childI, err := checkI(input.ChildNodes[0])
-		if err != nil {
-			return common.SyntaxTreeNode{}, err
-		}
-
-		// Preventing removal of I block when expended
-		return common.SyntaxTreeNode{
-			InnerToken: common.Token{
-				TokenKind: common.TokenBlock,
-				Token:     "end of if",
-			},
-			ChildNodes: []common.SyntaxTreeNode{
-				childI,
-			},
-		}, nil
-
-	default:
-		return common.SyntaxTreeNode{}, typeCheckerInternalError("I7 does not match")
-	}
-}
-
-func checkI8(input, childIdentifier common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+func checkMutableAssignment(input, childIdentifier common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 	switch len(input.ChildNodes) {
 	case 0:
 		return common.SyntaxTreeNode{
@@ -356,6 +237,150 @@ func checkI8(input, childIdentifier common.SyntaxTreeNode) (common.SyntaxTreeNod
 	default:
 		return common.SyntaxTreeNode{}, typeCheckerInternalError("I8 does not match")
 	}
+}
+
+func checkIf(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	// if R { I } I4
+	childIf := input.ChildNodes[0]
+	childR, err := checkR(input.ChildNodes[1])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+	childI, err := checkProgram(input.ChildNodes[2])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+	childI4, err := checkElseCondition(input.ChildNodes[3])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+
+	/*
+		Converts
+			I1
+			| \ \ \
+			if R I I4
+				   |    \
+				   else I7
+						...
+		to
+			if
+			|\ \ \
+			R I R I ...
+	*/
+
+	childIf.ChildNodes = []common.SyntaxTreeNode{
+		childR,
+		childI,
+	}
+	childIf.ChildNodes = append(childIf.ChildNodes, childI4.ChildNodes...)
+	return childIf, nil
+}
+
+func checkElseCondition(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	switch len(input.ChildNodes) {
+	case 0:
+		// epsilon
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "noop",
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}, nil
+
+	case 2:
+		// else I7
+		if input.ChildNodes[0].InnerToken.TokenKind != common.TokenElse {
+			return common.SyntaxTreeNode{}, typeCheckerInternalError(
+				fmt.Sprintf(
+					"I7 did not have else; had %v",
+					common.NameMapWithTokenKind[input.ChildNodes[0].InnerToken.TokenKind],
+				),
+			)
+		}
+		return checkElseIf(input.ChildNodes[1])
+
+	default:
+		return common.SyntaxTreeNode{}, typeCheckerInternalError("I7 does not have 0 or 2 children")
+	}
+}
+
+func checkElseIf(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	switch input.ChildNodes[0].InnerToken.TokenKind {
+	case common.TokenIf:
+		childIf := input.ChildNodes[0]
+		childR, err := checkR(input.ChildNodes[1])
+		childI, err := checkProgram(input.ChildNodes[2])
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+		childI4, err := checkElseCondition(input.ChildNodes[3])
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		childIf.ChildNodes = []common.SyntaxTreeNode{
+			childR,
+			childI,
+		}
+		childIf.ChildNodes = append(childIf.ChildNodes, childI4.ChildNodes...)
+
+		return childIf, nil
+
+	case common.TokenBlock:
+		childI, err := checkProgram(input.ChildNodes[0])
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		// Preventing removal of I block when expended
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "end of if",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childI,
+			},
+		}, nil
+
+	default:
+		return common.SyntaxTreeNode{}, typeCheckerInternalError("I7 does not match")
+	}
+}
+
+func checkWhile(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	// while R { I }
+	childWhile := input.ChildNodes[0]
+	childR, err := checkR(input.ChildNodes[1])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+	childI, err := checkProgram(input.ChildNodes[2])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+
+	childWhile.ChildNodes = []common.SyntaxTreeNode{
+		childR,
+		childI,
+	}
+	return childWhile, nil
+}
+
+func checkOutput(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	// output E
+	childOutput := input.ChildNodes[0]
+	childE, err := checkE(input.ChildNodes[1])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+
+	childOutput.ChildNodes = []common.SyntaxTreeNode{
+		childE,
+	}
+	return childOutput, nil
 }
 
 func checkR(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
