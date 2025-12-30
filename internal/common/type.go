@@ -136,11 +136,6 @@ type Token struct {
 	Token     string
 }
 
-type GeneratorOutput struct {
-	Result string
-	Err    error
-}
-
 type SyntaxTreeNode struct {
 	InnerToken Token
 	ChildNodes []SyntaxTreeNode
