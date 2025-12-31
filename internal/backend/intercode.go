@@ -22,7 +22,7 @@ func IntermediateCodeGenerator(input common.SyntaxTreeNode) ([]string, error) {
 	for _, child := range input.ChildNodes {
 		codesFromChild, err := generateNextInstructionSet(child)
 		if err != nil {
-			return []string{}, err
+			return intermediateCodes, err
 		}
 		intermediateCodes = append(intermediateCodes, codesFromChild...)
 	}
@@ -30,6 +30,10 @@ func IntermediateCodeGenerator(input common.SyntaxTreeNode) ([]string, error) {
 }
 
 func generateNextInstructionSet(input common.SyntaxTreeNode) ([]string, error) {
+	if input.InnerToken.Token == "noop" {
+		// a noop operation, which could be due to declaring and not initialising an identifier
+		return []string{}, nil
+	}
 	switch input.InnerToken.TokenKind {
 	case common.TokenAssignment:
 		// v = E
@@ -39,17 +43,27 @@ func generateNextInstructionSet(input common.SyntaxTreeNode) ([]string, error) {
 		}
 		codesFromChild = append(
 			codesFromChild,
-			fmt.Sprintf("%v = %v", input.InnerToken.Token, outputVariable),
+			fmt.Sprintf("%v = %v", input.ChildNodes[0].InnerToken.Token, outputVariable),
 		)
+		return codesFromChild, nil
 
 	case common.TokenIf:
-		// if R { I } I4
+		// if R { I } ...
 
 	case common.TokenWhile:
 		// while R { I }
 
 	case common.TokenOutput:
 		// output E
+		codesFromChild, outputVariable, err := generateForExpression(input.ChildNodes[0])
+		if err != nil {
+			return []string{}, err
+		}
+		codesFromChild = append(
+			codesFromChild,
+			fmt.Sprintf("print %v", outputVariable),
+		)
+		return codesFromChild, nil
 
 	default:
 		return []string{}, intermediateCodeGeneratorInternalError(
@@ -60,7 +74,7 @@ func generateNextInstructionSet(input common.SyntaxTreeNode) ([]string, error) {
 		)
 	}
 	return []string{}, &common.UnderConstructionError{
-		PointOfFailure: "Intermediate Code Generator",
+		PointOfFailure: "Intermediate Code Generator (Instruction)",
 		Message:        "",
 	}
 }

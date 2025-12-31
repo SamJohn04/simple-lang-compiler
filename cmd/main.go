@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/SamJohn04/simple-lang-compiler/internal/backend"
 	"github.com/SamJohn04/simple-lang-compiler/internal/common"
@@ -34,9 +35,9 @@ func main() {
 	}
 
 	intermediateCodes, err := backend.IntermediateCodeGenerator(programRoot)
+	fmt.Println(strings.Join(intermediateCodes, "\n"))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println(intermediateCodes)
 }
