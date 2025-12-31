@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	// "github.com/SamJohn04/simple-lang-compiler/internal/backend"
+	"github.com/SamJohn04/simple-lang-compiler/internal/backend"
 	"github.com/SamJohn04/simple-lang-compiler/internal/common"
 	"github.com/SamJohn04/simple-lang-compiler/internal/frontend"
 )
@@ -32,14 +32,11 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	programRoot.Display("")
 
-	/*
-		intermediateCodes, err := backend.IntermediateCodeGenerator(programRoot)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		fmt.Println(intermediateCodes)
-	*/
+	intermediateCodes, err := backend.IntermediateCodeGenerator(programRoot)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(intermediateCodes)
 }

@@ -71,6 +71,8 @@ func checkNextInstruction(input common.SyntaxTreeNode) (common.SyntaxTreeNode, e
 		// v=E
 		return checkReassignment(input)
 
+	// we do not need to store this information since all declarations get moved to the top of the file
+	// which is possible since functions do not exist in simple-language
 	case common.TokenLet:
 		// let I6
 		return checkAssignment(input)
@@ -145,6 +147,8 @@ func checkReassignment(input common.SyntaxTreeNode) (common.SyntaxTreeNode, erro
 
 func checkAssignment(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 	// let I6
+	// essentially generates the same output as Reassignment, but also sets flags
+
 	// let is unnecessary for further calculations
 	childI6, err := checkAssignmentAfterLet(input.ChildNodes[1])
 	if err != nil {

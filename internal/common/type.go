@@ -118,6 +118,14 @@ var NameMapWithTokenKind = map[TokenKind]string{
 	TokenBlock: "Code Block",
 }
 
+var Operators = map[TokenKind]string{
+	TokenExpressionAdd:    "+",
+	TokenExpressionSub:    "-",
+	TokenExpressionMul:    "*",
+	TokenExpressionDiv:    "/",
+	TokenExpressionModulo: "%",
+}
+
 type DataTypeOfIdentifier int
 
 const (
