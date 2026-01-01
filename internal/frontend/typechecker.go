@@ -265,13 +265,26 @@ func checkIf(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 						...
 		to
 			if
-			|\ \ \
-			R I R I ...
+			| \       \
+			if if      else
+			|\ \ \      \
+			R I R I ...  I
 	*/
 
+	// extra if block for code generation
+	grandChildIf := common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: common.TokenIf,
+			Token:     "if (extra)",
+		},
+		ChildNodes: []common.SyntaxTreeNode{
+			childR,
+			childI,
+		},
+	}
+
 	childIf.ChildNodes = []common.SyntaxTreeNode{
-		childR,
-		childI,
+		grandChildIf,
 	}
 	childIf.ChildNodes = append(childIf.ChildNodes, childI4.ChildNodes...)
 	return childIf, nil
@@ -320,9 +333,20 @@ func checkElseIf(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, err
 		}
 
+		// extra if block for code generation
+		grandChildIf := common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenIf,
+				Token:     "if (extra)",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childR,
+				childI,
+			},
+		}
+
 		childIf.ChildNodes = []common.SyntaxTreeNode{
-			childR,
-			childI,
+			grandChildIf,
 		}
 		childIf.ChildNodes = append(childIf.ChildNodes, childI4.ChildNodes...)
 
@@ -334,6 +358,17 @@ func checkElseIf(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, err
 		}
 
+		// extra else for code generation
+		childElse := common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenElse,
+				Token:     "else (extra)",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childI,
+			},
+		}
+
 		// Preventing removal of I block when expended
 		return common.SyntaxTreeNode{
 			InnerToken: common.Token{
@@ -341,7 +376,7 @@ func checkElseIf(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 				Token:     "end of if",
 			},
 			ChildNodes: []common.SyntaxTreeNode{
-				childI,
+				childElse,
 			},
 		}, nil
 
