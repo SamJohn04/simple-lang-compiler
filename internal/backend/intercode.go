@@ -49,6 +49,7 @@ func generateNextInstructionSet(input common.SyntaxTreeNode) ([]string, error) {
 
 	case common.TokenIf:
 		// if R { I } ...
+		return generateForIfStatement(input)
 
 	case common.TokenWhile:
 		// while R { I }
@@ -76,6 +77,73 @@ func generateNextInstructionSet(input common.SyntaxTreeNode) ([]string, error) {
 	return []string{}, &common.UnderConstructionError{
 		PointOfFailure: "Intermediate Code Generator (Instruction)",
 		Message:        "",
+	}
+}
+
+func generateForIfStatement(input common.SyntaxTreeNode) ([]string, error) {
+	// if the condition is true goto L1
+	// goto L2
+	// L1: --- if block ---
+	// goto LEND
+	// L2: if the condition is true goto L3 \\ in the case of else if
+	// goto L4
+	// ...
+	_, _, err := generateForRelation(input.ChildNodes[0])
+	if err != nil {
+		return []string{}, err
+	}
+	return []string{}, &common.UnderConstructionError{
+		PointOfFailure: "Intermediate Code Generator (Instruction)",
+		Message:        "",
+	}
+}
+
+func generateForRelation(input common.SyntaxTreeNode) ([]string, string, error) {
+	switch input.InnerToken.TokenKind {
+	case common.TokenRelationalEquals:
+		fallthrough
+	case common.TokenRelationalGreaterThan:
+		fallthrough
+	case common.TokenRelationalGreaterThanOrEquals:
+		fallthrough
+	case common.TokenRelationalLesserThan:
+		fallthrough
+	case common.TokenRelationalLesserThanOrEquals:
+		fallthrough
+	case common.TokenRelationalNotEquals:
+		firstChildCodes, firstOutputVariable, err := generateForExpression(input.ChildNodes[0])
+		if err != nil {
+			return []string{}, "", err
+		}
+		secondChildCodes, secondOutputVariable, err := generateForExpression(input.ChildNodes[1])
+		if err != nil {
+			return []string{}, "", err
+		}
+
+		identifier := getNextIdentifier()
+
+		codes := []string{}
+		codes = append(codes, firstChildCodes...)
+		codes = append(codes, secondChildCodes...)
+		codes = append(
+			codes,
+			fmt.Sprintf(
+				"%v = %v %v %v",
+				identifier,
+				firstOutputVariable,
+				common.Operators[input.InnerToken.TokenKind],
+				secondOutputVariable,
+			),
+		)
+		return codes, identifier, nil
+
+	default:
+		return []string{}, "", intermediateCodeGeneratorInternalError(
+			fmt.Sprintf(
+				"Unexpected token %v at a relation",
+				common.NameMapWithTokenKind[input.InnerToken.TokenKind],
+			),
+		)
 	}
 }
 

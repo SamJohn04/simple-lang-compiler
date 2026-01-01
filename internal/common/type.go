@@ -124,6 +124,13 @@ var Operators = map[TokenKind]string{
 	TokenExpressionMul:    "*",
 	TokenExpressionDiv:    "/",
 	TokenExpressionModulo: "%",
+
+	TokenRelationalEquals:              "==",
+	TokenRelationalGreaterThan:         ">",
+	TokenRelationalGreaterThanOrEquals: ">=",
+	TokenRelationalNotEquals:           "!=",
+	TokenRelationalLesserThan:          "<",
+	TokenRelationalLesserThanOrEquals:  "<=",
 }
 
 type DataTypeOfIdentifier int
