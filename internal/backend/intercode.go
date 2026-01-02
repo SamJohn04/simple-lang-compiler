@@ -8,16 +8,18 @@ import (
 
 var (
 	numberOfIdentifiers int
-	identifierData      map[string]int
-	stack               []int
+	numberOfGotos       int
 )
 
 // returns 3-Address Code
 func IntermediateCodeGenerator(input common.SyntaxTreeNode) ([]string, error) {
 	numberOfIdentifiers = 0
-	identifierData = make(map[string]int)
-	stack = []int{}
+	numberOfGotos = 0
 
+	return generateForProgram(input)
+}
+
+func generateForProgram(input common.SyntaxTreeNode) ([]string, error) {
 	intermediateCodes := []string{}
 	for _, child := range input.ChildNodes {
 		codesFromChild, err := generateNextInstructionSet(child)
@@ -84,18 +86,43 @@ func generateForIfStatement(input common.SyntaxTreeNode) ([]string, error) {
 	// if the condition is true goto L1
 	// goto L2
 	// L1: --- if block ---
-	// goto LEND
+	// goto LX
 	// L2: if the condition is true goto L3 \\ in the case of else if
 	// goto L4
 	// ...
-	_, _, err := generateForRelation(input.ChildNodes[0])
-	if err != nil {
-		return []string{}, err
+	// LX-1: --- else block --- \\ if it exists
+	// LX: --- continue ---
+	codes := []string{}
+	finalGotoLink := getNextGoto()
+	for _, child := range input.ChildNodes {
+		if child.InnerToken.TokenKind == common.TokenElse {
+			childCodes, err := generateForProgram(child.ChildNodes[0])
+			if err != nil {
+				return []string{}, err
+			}
+			codes = append(codes, childCodes...)
+			break
+		}
+		codesFromRelation, identifier, err := generateForRelation(child.ChildNodes[0])
+		if err != nil {
+			return []string{}, err
+		}
+		childCodes, err := generateForProgram(child.ChildNodes[1])
+		if err != nil {
+			return []string{}, err
+		}
+		holdGoto := getNextGoto()
+		nextGoto := getNextGoto()
+		codes = append(codes, codesFromRelation...)
+		codes = append(codes, fmt.Sprintf("if %v goto %v", identifier, holdGoto))
+		codes = append(codes, fmt.Sprintf("goto %v", nextGoto))
+		codes = append(codes, fmt.Sprintf("%v:", holdGoto))
+		codes = append(codes, childCodes...)
+		codes = append(codes, fmt.Sprintf("goto %v", finalGotoLink))
+		codes = append(codes, fmt.Sprintf("%v:", nextGoto))
 	}
-	return []string{}, &common.UnderConstructionError{
-		PointOfFailure: "Intermediate Code Generator (Instruction)",
-		Message:        "",
-	}
+	codes = append(codes, fmt.Sprintf("%v:", finalGotoLink))
+	return codes, nil
 }
 
 func generateForRelation(input common.SyntaxTreeNode) ([]string, string, error) {
@@ -220,6 +247,11 @@ func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error
 			),
 		)
 	}
+}
+
+func getNextGoto() string {
+	numberOfGotos++
+	return fmt.Sprintf("L%d", numberOfGotos)
 }
 
 func getNextIdentifier() string {
