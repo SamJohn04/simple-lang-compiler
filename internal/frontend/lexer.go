@@ -42,7 +42,7 @@ func lexSegment(segment string) (common.Token, string) {
 	// Remove all leading and ending ' '
 	segment = strings.Trim(segment, " ")
 
-	if len(segment) == 0 {
+	if len(segment) == 0 || len(segment) >= 2 && segment[:2] == "//" {
 		return common.Token{
 			TokenKind: common.TokenEmpty,
 			Token:     "",
