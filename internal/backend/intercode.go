@@ -58,16 +58,22 @@ func generateNextInstructionSet(input common.SyntaxTreeNode) ([]string, error) {
 		return generateForWhileStatement(input)
 
 	case common.TokenOutput:
-		// output E
-		codesFromChild, outputVariable, err := generateForExpression(input.ChildNodes[0])
-		if err != nil {
-			return []string{}, err
+		// output str C
+		codes := []string{}
+		param := []string{input.ChildNodes[0].InnerToken.Token}
+		for _, child := range input.ChildNodes[1:] {
+			codesFromChild, outputVariable, err := generateForExpression(child)
+			if err != nil {
+				return []string{}, err
+			}
+			codes = append(codes, codesFromChild...)
+			param = append(param, outputVariable)
 		}
-		codesFromChild = append(
-			codesFromChild,
-			fmt.Sprintf("print %v", outputVariable),
-		)
-		return codesFromChild, nil
+		for _, p := range param {
+			codes = append(codes, fmt.Sprintf("param %v", p))
+		}
+		codes = append(codes, fmt.Sprintf("call printf, %v", len(param)+1))
+		return codes, nil
 
 	default:
 		return []string{}, intermediateCodeGeneratorInternalError(
@@ -205,7 +211,7 @@ func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error
 		identifier := getNextIdentifier()
 		codes := []string{
 			fmt.Sprintf(
-				"%v = input",
+				"%v = call input, 0",
 				identifier,
 			),
 		}

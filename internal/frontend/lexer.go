@@ -196,6 +196,26 @@ func lexSegment(segment string) (common.Token, string) {
 		}, ""
 	}
 
+	if segment[0] == '"' {
+		end := 0
+		for i, c := range segment[1:] {
+			if c == '"' {
+				end = i + 2
+				break
+			}
+		}
+		if end == 0 {
+			return common.Token{
+				TokenKind: common.TokenError,
+				Token:     "\" is not closed",
+			}, ""
+		}
+		return common.Token{
+			TokenKind: common.TokenLiteralString,
+			Token:     segment[0:end],
+		}, segment[end:]
+	}
+
 	if segment[0] >= '0' && segment[0] <= '9' {
 		for i, c := range segment {
 			if c >= '0' && c <= '9' {

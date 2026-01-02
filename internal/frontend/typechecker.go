@@ -86,7 +86,7 @@ func checkNextInstruction(input common.SyntaxTreeNode) (common.SyntaxTreeNode, e
 		return checkWhile(input)
 
 	case common.TokenOutput:
-		// output E
+		// output str C
 		return checkOutput(input)
 
 	default:
@@ -409,17 +409,38 @@ func checkWhile(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 }
 
 func checkOutput(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
-	// output E
+	// output str C
 	childOutput := input.ChildNodes[0]
-	childE, err := checkE(input.ChildNodes[1])
+	childStr := input.ChildNodes[1]
+	childC, err := checkOutputContinuation(input.ChildNodes[2])
 	if err != nil {
 		return common.SyntaxTreeNode{}, err
 	}
 
 	childOutput.ChildNodes = []common.SyntaxTreeNode{
+		childStr,
+	}
+	childOutput.ChildNodes = append(childOutput.ChildNodes, childC.ChildNodes...)
+	return childOutput, nil
+}
+
+func checkOutputContinuation(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	if len(input.ChildNodes) == 0 {
+		return input, nil
+	}
+	childOutput, err := checkOutputContinuation(input.ChildNodes[1])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+	childE, err := checkE(input.ChildNodes[0])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+	input.ChildNodes = []common.SyntaxTreeNode{
 		childE,
 	}
-	return childOutput, nil
+	input.ChildNodes = append(input.ChildNodes, childOutput.ChildNodes...)
+	return input, nil
 }
 
 func checkR(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {

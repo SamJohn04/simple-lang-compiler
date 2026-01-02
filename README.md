@@ -17,13 +17,15 @@ I1 -> variable=E |
     let I6 |
     if R { I } I4 |
     while R { I } |
-    output E
+    output literal_str C
 
 I4 -> else I7 | ε
 I7 -> if R { I } I4 | { I }
 
 I6 -> mut variable I8 | variable=E
 I8 -> =E | ε
+
+C -> , E C | ε
 
 R -> ER1E
 R1 -> > | < | == | != | >= | <=
@@ -41,7 +43,7 @@ let a = 10;
 let b = 20;
 
 let out = a + (b * 10)/input;
-output out;
+output "%d", out;
 ```
 ```
 let n = input;
@@ -49,10 +51,10 @@ let di = input;
 
 let mut i = 0;
 while i < n {
-    output i;
+    output "%d", i;
     i = i + di;
 };
 
-output i;
-output n;
+output "%d", i;
+output "%d", n;
 ```

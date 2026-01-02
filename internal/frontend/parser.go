@@ -85,7 +85,7 @@ func parseNextInstruction(input <-chan common.Token) (common.SyntaxTreeNode, err
 		return parseWhile(input)
 
 	case common.TokenOutput:
-		// I1 -> output E
+		// I1 -> output str C
 		return parseOutput(input)
 
 	default:
@@ -485,7 +485,7 @@ func parseWhile(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 }
 
 func parseOutput(input <-chan common.Token) (common.SyntaxTreeNode, error) {
-	// I1 -> output E
+	// I1 -> output str C
 	childOutput := common.SyntaxTreeNode{
 		InnerToken: common.Token{
 			TokenKind: common.TokenOutput,
@@ -495,7 +495,19 @@ func parseOutput(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	}
 
 	movePointerToNextToken(input)
-	childE, err := parseE(input)
+	if currPointer.TokenKind != common.TokenLiteralString {
+		return common.SyntaxTreeNode{}, parserError("string literal expected after output")
+	}
+	childStr := common.SyntaxTreeNode{
+		InnerToken: common.Token{
+			TokenKind: common.TokenLiteralString,
+			Token:     currPointer.Token,
+		},
+		ChildNodes: []common.SyntaxTreeNode{},
+	}
+
+	movePointerToNextToken(input)
+	childC, err := parseOutputContinuation(input)
 	if err != nil {
 		return common.SyntaxTreeNode{}, err
 	}
@@ -503,14 +515,47 @@ func parseOutput(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	outputBlock := common.SyntaxTreeNode{
 		InnerToken: common.Token{
 			TokenKind: common.TokenBlock,
-			Token:     "I1>output E",
+			Token:     "I1>output str C",
 		},
 		ChildNodes: []common.SyntaxTreeNode{
 			childOutput,
-			childE,
+			childStr,
+			childC,
 		},
 	}
 	return outputBlock, nil
+}
+
+func parseOutputContinuation(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+	switch currPointer.TokenKind {
+	case common.TokenLineEnd:
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "C",
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}, nil
+	case common.TokenComma:
+		movePointerToNextToken(input)
+		childE, err := parseE(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+		childC, err := parseOutputContinuation(input)
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "C>,E C",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childE,
+				childC,
+			},
+		}, err
+	default:
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in C")
+	}
 }
 
 func parseR(input <-chan common.Token) (common.SyntaxTreeNode, error) {
