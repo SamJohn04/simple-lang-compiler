@@ -8,11 +8,11 @@ const (
 	TokenIdent TokenKind = iota + 1
 
 	TokenLiteralInt
+	TokenLiteralString
 
-	TokenLiteralBool   // WARN not implemented yet
-	TokenLiteralChar   // WARN not implemented yet
-	TokenLiteralFloat  // WARN not implemented yet
-	TokenLiteralString // WARN not implemented yet
+	TokenLiteralBool  // WARN not implemented yet
+	TokenLiteralChar  // WARN not implemented yet
+	TokenLiteralFloat // WARN not implemented yet
 
 	TokenAssignment
 
@@ -50,6 +50,8 @@ const (
 	TokenInput
 	TokenOutput
 
+	TokenComma
+
 	TokenLineEnd
 
 	TokenEOF
@@ -65,12 +67,12 @@ const (
 var NameMapWithTokenKind = map[TokenKind]string{
 	TokenIdent: "Identifier",
 
-	TokenLiteralInt: "Literal Int",
+	TokenLiteralInt:    "Literal Int",
+	TokenLiteralString: "Literal String",
 
-	TokenLiteralBool:   "Literal Bool",   // WARN not implemented yet
-	TokenLiteralChar:   "Literal Char",   // WARN not implemented yet
-	TokenLiteralFloat:  "Literal Float",  // WARN not implemented yet
-	TokenLiteralString: "Literal String", // WARN not implemented yet
+	TokenLiteralBool:  "Literal Bool",  // WARN not implemented yet
+	TokenLiteralChar:  "Literal Char",  // WARN not implemented yet
+	TokenLiteralFloat: "Literal Float", // WARN not implemented yet
 
 	TokenAssignment: "Assignment",
 
@@ -107,6 +109,8 @@ var NameMapWithTokenKind = map[TokenKind]string{
 
 	TokenInput:  "input",
 	TokenOutput: "output",
+
+	TokenComma: "comma",
 
 	TokenLineEnd: "Line End",
 

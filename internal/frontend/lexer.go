@@ -52,6 +52,11 @@ func lexSegment(segment string) (common.Token, string) {
 			TokenKind: common.TokenLineEnd,
 			Token:     ";",
 		}, segment[1:]
+	} else if segment[0] == ',' {
+		return common.Token{
+			TokenKind: common.TokenComma,
+			Token:     ",",
+		}, segment[1:]
 	} else if segment[0] == '(' {
 		return common.Token{
 			TokenKind: common.TokenOpenParanthesis,
