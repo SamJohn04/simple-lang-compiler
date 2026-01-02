@@ -2,6 +2,10 @@
 
 A compiler for a simple language, to help better understand the practical side of compilers.
 
+## Comments
+
+Comments start with `//`, and are ignored by the lexer.
+
 ## Parser
 
 For this compiler, an LL\(1\) parser has been chosen. The parser uses the following grammar.
