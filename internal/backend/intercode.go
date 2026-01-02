@@ -55,6 +55,7 @@ func generateNextInstructionSet(input common.SyntaxTreeNode) ([]string, error) {
 
 	case common.TokenWhile:
 		// while R { I }
+		return generateForWhileStatement(input)
 
 	case common.TokenOutput:
 		// output E
@@ -75,10 +76,6 @@ func generateNextInstructionSet(input common.SyntaxTreeNode) ([]string, error) {
 				common.NameMapWithTokenKind[input.InnerToken.TokenKind],
 			),
 		)
-	}
-	return []string{}, &common.UnderConstructionError{
-		PointOfFailure: "Intermediate Code Generator (Instruction)",
-		Message:        "",
 	}
 }
 
@@ -122,6 +119,30 @@ func generateForIfStatement(input common.SyntaxTreeNode) ([]string, error) {
 		codes = append(codes, fmt.Sprintf("%v:", nextGoto))
 	}
 	codes = append(codes, fmt.Sprintf("%v:", finalGotoLink))
+	return codes, nil
+}
+
+func generateForWhileStatement(input common.SyntaxTreeNode) ([]string, error) {
+	whileGoto := getNextGoto()
+	holdGoto := getNextGoto()
+	nextGoto := getNextGoto()
+	codes := []string{fmt.Sprintf("%v:", whileGoto)}
+	codesFromRelation, identifier, err := generateForRelation(input.ChildNodes[0])
+	if err != nil {
+		return []string{}, err
+	}
+	childCodes, err := generateForProgram(input.ChildNodes[1])
+	if err != nil {
+		return childCodes, err
+	}
+	codes = append(codes, codesFromRelation...)
+	codes = append(codes, fmt.Sprintf("if %v goto %v", identifier, holdGoto))
+	codes = append(codes, fmt.Sprintf("goto %v", nextGoto))
+	codes = append(codes, fmt.Sprintf("%v:", holdGoto))
+	codes = append(codes, childCodes...)
+	codes = append(codes, fmt.Sprintf("goto %v", whileGoto))
+	codes = append(codes, fmt.Sprintf("%v:", nextGoto))
+
 	return codes, nil
 }
 
