@@ -72,7 +72,7 @@ func generateNextInstructionSet(input common.SyntaxTreeNode) ([]string, error) {
 		for _, p := range param {
 			codes = append(codes, fmt.Sprintf("param %v", p))
 		}
-		codes = append(codes, fmt.Sprintf("call printf, %v", len(param)+1))
+		codes = append(codes, "call printf")
 		return codes, nil
 
 	default:
@@ -211,7 +211,7 @@ func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error
 		identifier := getNextIdentifier()
 		codes := []string{
 			fmt.Sprintf(
-				"%v = call input, 0",
+				"%v = input",
 				identifier,
 			),
 		}

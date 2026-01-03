@@ -11,6 +11,10 @@ import (
 )
 
 func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("at least 1 argument required")
+		os.Exit(1)
+	}
 	filename := os.Args[1]
 	file, err := os.Open(filename)
 	if err != nil {
@@ -35,9 +39,20 @@ func main() {
 	}
 
 	intermediateCodes, err := backend.IntermediateCodeGenerator(programRoot)
-	fmt.Println(strings.Join(intermediateCodes, "\n"))
+	if err != nil {
+		fmt.Println(strings.Join(intermediateCodes, "\n"))
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	finalCode, err := backend.CodeGenerator(intermediateCodes)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	output_file_name := "output.c"
+	if len(os.Args) >= 3 {
+		output_file_name = os.Args[2]
+	}
+	os.WriteFile(output_file_name, []byte(finalCode), 0o664)
 }
