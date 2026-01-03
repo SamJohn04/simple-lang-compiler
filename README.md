@@ -39,11 +39,25 @@ F -> input | variable | literal | (E) | -F
 
 E.g. Program:
 ```
-let a = 10;
-let b = 20;
+output "Enter a number: ";
+let n = input;
 
-let out = a + (b * 10)/input;
-output "%d", out;
+let mut i = 2;
+let mut fib1 = 1;
+let mut fib2 = 1;
+
+output "%d: %d\n", 0, fib1;
+output "%d: %d\n", 1, fib2;
+
+let mut temp;
+while i < n {
+    temp = fib1 + fib2;
+    fib1 = fib2;
+    fib2 = temp;
+    output "%d: %d\n", i, temp;
+
+    i = i + 1;
+};
 ```
 ```
 let n = input;
