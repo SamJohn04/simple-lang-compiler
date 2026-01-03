@@ -658,6 +658,8 @@ func parseE1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		fallthrough
 	case common.TokenOpenCurly:
 		fallthrough
+	case common.TokenComma:
+		fallthrough
 	case common.TokenLineEnd:
 		// E1 -> epsilon
 		return common.SyntaxTreeNode{
@@ -738,6 +740,8 @@ func parseT1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenCloseParanthesis:
 		fallthrough
 	case common.TokenOpenCurly:
+		fallthrough
+	case common.TokenComma:
 		fallthrough
 	case common.TokenLineEnd:
 		fallthrough
