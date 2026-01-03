@@ -137,37 +137,44 @@ func lexSegment(segment string) (common.Token, string) {
 			TokenKind: common.TokenAssignment,
 			Token:     "=",
 		}, segment[1:]
-	} else if len(segment) >= 2 && segment[:2] == "if" && (len(segment) == 2 || !isCharacterFromVariable(segment[2])) {
+	} else if len(segment) >= 2 && segment[:2] == "if" &&
+		(len(segment) == 2 || !isCharacterFromVariable(segment[2])) {
 		return common.Token{
 			TokenKind: common.TokenIf,
 			Token:     "if",
 		}, segment[2:]
-	} else if len(segment) >= 4 && segment[:4] == "else" && (len(segment) == 4 || !isCharacterFromVariable(segment[4])) {
+	} else if len(segment) >= 4 && segment[:4] == "else" &&
+		(len(segment) == 4 || !isCharacterFromVariable(segment[4])) {
 		return common.Token{
 			TokenKind: common.TokenElse,
 			Token:     "else",
 		}, segment[4:]
-	} else if len(segment) >= 5 && segment[:5] == "while" && (len(segment) == 5 || !isCharacterFromVariable(segment[5])) {
+	} else if len(segment) >= 5 && segment[:5] == "while" &&
+		(len(segment) == 5 || !isCharacterFromVariable(segment[5])) {
 		return common.Token{
 			TokenKind: common.TokenWhile,
 			Token:     "while",
 		}, segment[5:]
-	} else if len(segment) >= 5 && segment[:5] == "input" && (len(segment) == 5 || !isCharacterFromVariable(segment[5])) {
+	} else if len(segment) >= 5 && segment[:5] == "input" &&
+		(len(segment) == 5 || !isCharacterFromVariable(segment[5])) {
 		return common.Token{
 			TokenKind: common.TokenInput,
 			Token:     "input",
 		}, segment[5:]
-	} else if len(segment) >= 6 && segment[:6] == "output" && (len(segment) == 6 || !isCharacterFromVariable(segment[6])) {
+	} else if len(segment) >= 6 &&
+		segment[:6] == "output" && (len(segment) == 6 || !isCharacterFromVariable(segment[6])) {
 		return common.Token{
 			TokenKind: common.TokenOutput,
 			Token:     "output",
 		}, segment[6:]
-	} else if len(segment) >= 3 && segment[:3] == "let" && (len(segment) == 3 || !isCharacterFromVariable(segment[3])) {
+	} else if len(segment) >= 3 &&
+		segment[:3] == "let" && (len(segment) == 3 || !isCharacterFromVariable(segment[3])) {
 		return common.Token{
 			TokenKind: common.TokenLet,
 			Token:     "let",
 		}, segment[3:]
-	} else if len(segment) >= 3 && segment[:3] == "mut" && (len(segment) == 3 || !isCharacterFromVariable(segment[3])) {
+	} else if len(segment) >= 3 &&
+		segment[:3] == "mut" && (len(segment) == 3 || !isCharacterFromVariable(segment[3])) {
 		return common.Token{
 			TokenKind: common.TokenMutable,
 			Token:     "mut",
