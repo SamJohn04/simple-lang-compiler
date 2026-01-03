@@ -1,6 +1,10 @@
 package frontend
 
-import "github.com/SamJohn04/simple-lang-compiler/internal/common"
+import (
+	"fmt"
+
+	"github.com/SamJohn04/simple-lang-compiler/internal/common"
+)
 
 var currPointer common.Token
 
@@ -9,7 +13,12 @@ func Parser(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	movePointerToNextToken(input)
 
 	output, err := parseProgram(input)
-	if err != nil {
+	if err != nil && currPointer.TokenKind == common.TokenError {
+		return common.SyntaxTreeNode{}, &common.CompilationError{
+			PointOfFailure: "Parser",
+			Message:        fmt.Sprintf("Error token causing havoc: \n\t%v", err),
+		}
+	} else if err != nil {
 		return common.SyntaxTreeNode{}, err
 	}
 	return output, nil
