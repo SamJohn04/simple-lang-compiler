@@ -106,7 +106,7 @@ func generateForIfStatement(input common.SyntaxTreeNode) ([]string, error) {
 			codes = append(codes, childCodes...)
 			break
 		}
-		codesFromRelation, identifier, err := generateForRelation(child.ChildNodes[0])
+		codesFromRelation, identifier, err := generateForExpression(child.ChildNodes[0])
 		if err != nil {
 			return []string{}, err
 		}
@@ -133,7 +133,7 @@ func generateForWhileStatement(input common.SyntaxTreeNode) ([]string, error) {
 	holdGoto := getNextGoto()
 	nextGoto := getNextGoto()
 	codes := []string{fmt.Sprintf("%v:", whileGoto)}
-	codesFromRelation, identifier, err := generateForRelation(input.ChildNodes[0])
+	codesFromRelation, identifier, err := generateForExpression(input.ChildNodes[0])
 	if err != nil {
 		return []string{}, err
 	}
@@ -152,55 +152,6 @@ func generateForWhileStatement(input common.SyntaxTreeNode) ([]string, error) {
 	return codes, nil
 }
 
-func generateForRelation(input common.SyntaxTreeNode) ([]string, string, error) {
-	switch input.InnerToken.TokenKind {
-	case common.TokenRelationalEquals:
-		fallthrough
-	case common.TokenRelationalGreaterThan:
-		fallthrough
-	case common.TokenRelationalGreaterThanOrEquals:
-		fallthrough
-	case common.TokenRelationalLesserThan:
-		fallthrough
-	case common.TokenRelationalLesserThanOrEquals:
-		fallthrough
-	case common.TokenRelationalNotEquals:
-		firstChildCodes, firstOutputVariable, err := generateForExpression(input.ChildNodes[0])
-		if err != nil {
-			return []string{}, "", err
-		}
-		secondChildCodes, secondOutputVariable, err := generateForExpression(input.ChildNodes[1])
-		if err != nil {
-			return []string{}, "", err
-		}
-
-		identifier := getNextIdentifier()
-
-		codes := []string{}
-		codes = append(codes, firstChildCodes...)
-		codes = append(codes, secondChildCodes...)
-		codes = append(
-			codes,
-			fmt.Sprintf(
-				"%v = %v %v %v",
-				identifier,
-				firstOutputVariable,
-				common.Operators[input.InnerToken.TokenKind],
-				secondOutputVariable,
-			),
-		)
-		return codes, identifier, nil
-
-	default:
-		return []string{}, "", intermediateCodeGeneratorInternalError(
-			fmt.Sprintf(
-				"Unexpected token %v at a relation",
-				common.NameMapWithTokenKind[input.InnerToken.TokenKind],
-			),
-		)
-	}
-}
-
 func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error) {
 	switch input.InnerToken.TokenKind {
 	case common.TokenLiteralInt:
@@ -217,9 +168,11 @@ func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error
 		}
 		return codes, identifier, nil
 
+	case common.TokenNot:
+		fallthrough
 	case common.TokenExpressionSub:
 		if len(input.ChildNodes) == 1 {
-			// t = - t
+			// t = op t
 			childCodes, outputVariable, err := generateForExpression(input.ChildNodes[0])
 			if err != nil {
 				return []string{}, "", err
@@ -228,7 +181,12 @@ func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error
 			nextIdentifier := getNextIdentifier()
 			childCodes = append(
 				childCodes,
-				fmt.Sprintf("%v = - %v", nextIdentifier, outputVariable),
+				fmt.Sprintf(
+					"%v = %v %v",
+					nextIdentifier,
+					common.Operators[common.TokenNot],
+					outputVariable,
+				),
 			)
 			return childCodes, nextIdentifier, nil
 		}
@@ -240,6 +198,22 @@ func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error
 	case common.TokenExpressionDiv:
 		fallthrough
 	case common.TokenExpressionModulo:
+		fallthrough
+	case common.TokenRelationalEquals:
+		fallthrough
+	case common.TokenRelationalGreaterThan:
+		fallthrough
+	case common.TokenRelationalGreaterThanOrEquals:
+		fallthrough
+	case common.TokenRelationalLesserThan:
+		fallthrough
+	case common.TokenRelationalLesserThanOrEquals:
+		fallthrough
+	case common.TokenRelationalNotEquals:
+		fallthrough
+	case common.TokenAnd:
+		fallthrough
+	case common.TokenOr:
 		// t = t op t
 		firstChildCodes, firstOutputVariable, err := generateForExpression(input.ChildNodes[0])
 		if err != nil {

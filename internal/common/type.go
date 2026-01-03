@@ -16,9 +16,9 @@ const (
 
 	TokenAssignment
 
-	TokenOr  // WARN not implemented yet
-	TokenAnd // WARN not implemented yet
-	TokenNot // WARN not implemented yet
+	TokenOr
+	TokenAnd
+	TokenNot
 
 	TokenRelationalEquals
 	TokenRelationalNotEquals
@@ -76,9 +76,9 @@ var NameMapWithTokenKind = map[TokenKind]string{
 
 	TokenAssignment: "Assignment",
 
-	TokenOr:  "OR",  // WARN not implemented yet
-	TokenAnd: "AND", // WARN not implemented yet
-	TokenNot: "NOT", // WARN not implemented yet
+	TokenOr:  "OR",
+	TokenAnd: "AND",
+	TokenNot: "NOT",
 
 	TokenRelationalEquals:              "Relational Equals",
 	TokenRelationalNotEquals:           "Relational Not Equals",
@@ -135,6 +135,10 @@ var Operators = map[TokenKind]string{
 	TokenRelationalNotEquals:           "!=",
 	TokenRelationalLesserThan:          "<",
 	TokenRelationalLesserThanOrEquals:  "<=",
+
+	TokenOr:  "||",
+	TokenAnd: "&&",
+	TokenNot: "!",
 }
 
 type DataTypeOfIdentifier int

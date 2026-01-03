@@ -102,6 +102,21 @@ func lexSegment(segment string) (common.Token, string) {
 			TokenKind: common.TokenExpressionModulo,
 			Token:     "%",
 		}, segment[1:]
+	} else if segment[0] == '!' {
+		return common.Token{
+			TokenKind: common.TokenNot,
+			Token:     "!",
+		}, segment[1:]
+	} else if len(segment) >= 2 && segment[:2] == "&&" {
+		return common.Token{
+			TokenKind: common.TokenAnd,
+			Token:     "&&",
+		}, segment[2:]
+	} else if len(segment) >= 2 && segment[:2] == "||" {
+		return common.Token{
+			TokenKind: common.TokenOr,
+			Token:     "||",
+		}, segment[2:]
 	} else if len(segment) >= 2 && segment[:2] == "==" {
 		return common.Token{
 			TokenKind: common.TokenRelationalEquals,

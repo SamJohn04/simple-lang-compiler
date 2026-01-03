@@ -78,7 +78,7 @@ func parseProgram(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 func parseNextInstruction(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	switch currPointer.TokenKind {
 	case common.TokenIdent:
-		// I1 -> v=E
+		// I1 -> v=R
 		return parseReassignment(input)
 
 	case common.TokenLet:
@@ -103,7 +103,7 @@ func parseNextInstruction(input <-chan common.Token) (common.SyntaxTreeNode, err
 }
 
 func parseReassignment(input <-chan common.Token) (common.SyntaxTreeNode, error) {
-	// I1 -> v=E
+	// I1 -> v=R
 	childIdent := common.SyntaxTreeNode{
 		InnerToken: common.Token{
 			TokenKind: currPointer.TokenKind,
@@ -125,16 +125,16 @@ func parseReassignment(input <-chan common.Token) (common.SyntaxTreeNode, error)
 	}
 
 	movePointerToNextToken(input)
-	childE, err := parseE(input)
+	childR, err := parseR(input)
 	return common.SyntaxTreeNode{
 		InnerToken: common.Token{
 			TokenKind: common.TokenBlock,
-			Token:     "I1>v=E",
+			Token:     "I1>v=R",
 		},
 		ChildNodes: []common.SyntaxTreeNode{
 			childIdent,
 			childEquals,
-			childE,
+			childR,
 		},
 	}, err
 }
@@ -166,7 +166,7 @@ func parseAssignment(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 func parseAssignmentAfterLet(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	switch currPointer.TokenKind {
 	case common.TokenIdent:
-		// I6 -> v=E
+		// I6 -> v=R
 		childIdent := common.SyntaxTreeNode{
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
@@ -188,16 +188,16 @@ func parseAssignmentAfterLet(input <-chan common.Token) (common.SyntaxTreeNode, 
 		}
 
 		movePointerToNextToken(input)
-		childE, err := parseE(input)
+		childR, err := parseR(input)
 		return common.SyntaxTreeNode{
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
-				Token:     "I6>v=E",
+				Token:     "I6>v=R",
 			},
 			ChildNodes: []common.SyntaxTreeNode{
 				childIdent,
 				childEquals,
-				childE,
+				childR,
 			},
 		}, err
 
@@ -257,7 +257,7 @@ func parseMutableAssignment(input <-chan common.Token) (common.SyntaxTreeNode, e
 		}, nil
 
 	case common.TokenAssignment:
-		// I8 -> = E
+		// I8 -> = R
 		childEquals := common.SyntaxTreeNode{
 			InnerToken: common.Token{
 				TokenKind: common.TokenAssignment,
@@ -267,16 +267,16 @@ func parseMutableAssignment(input <-chan common.Token) (common.SyntaxTreeNode, e
 		}
 
 		movePointerToNextToken(input)
-		childE, err := parseE(input)
+		childR, err := parseR(input)
 
 		return common.SyntaxTreeNode{
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
-				Token:     "I8>=E",
+				Token:     "I8>=R",
 			},
 			ChildNodes: []common.SyntaxTreeNode{
 				childEquals,
-				childE,
+				childR,
 			},
 		}, err
 
@@ -547,7 +547,7 @@ func parseOutputContinuation(input <-chan common.Token) (common.SyntaxTreeNode, 
 		}, nil
 	case common.TokenComma:
 		movePointerToNextToken(input)
-		childE, err := parseE(input)
+		childR, err := parseR(input)
 		if err != nil {
 			return common.SyntaxTreeNode{}, err
 		}
@@ -558,7 +558,7 @@ func parseOutputContinuation(input <-chan common.Token) (common.SyntaxTreeNode, 
 				Token:     "C>,E C",
 			},
 			ChildNodes: []common.SyntaxTreeNode{
-				childE,
+				childR,
 				childC,
 			},
 		}, err
@@ -576,31 +576,252 @@ func parseR(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenOpenParanthesis:
 		fallthrough
 	case common.TokenInput:
-		// R -> E R1 E
+		fallthrough
+	case common.TokenNot:
+		fallthrough
+	case common.TokenExpressionSub:
+		childRa, err := parseRa(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		childRz, err := parseRz(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "R>Ra Rz",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childRa,
+				childRz,
+			},
+		}, nil
+	default:
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in R")
+	}
+}
+
+func parseRz(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+	switch currPointer.TokenKind {
+	case common.TokenOr:
+		childOr := common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenOr,
+				Token:     "||",
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}
+
+		movePointerToNextToken(input)
+		childRa, err := parseRa(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		childRz, err := parseRz(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "Rz>|| Ra Rz",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childOr,
+				childRa,
+				childRz,
+			},
+		}, nil
+
+	case common.TokenOpenCurly:
+		fallthrough
+	case common.TokenCloseParanthesis:
+		fallthrough
+	case common.TokenComma:
+		fallthrough
+	case common.TokenLineEnd:
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "Rz",
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}, nil
+
+	default:
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in Rz")
+	}
+}
+
+func parseRa(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+	switch currPointer.TokenKind {
+	case common.TokenIdent:
+		fallthrough
+	case common.TokenLiteralInt:
+		fallthrough
+	case common.TokenOpenParanthesis:
+		fallthrough
+	case common.TokenInput:
+		fallthrough
+	case common.TokenNot:
+		fallthrough
+	case common.TokenExpressionSub:
+		childRb, err := parseRb(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		childRy, err := parseRy(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "Ra>Rb Ry",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childRb,
+				childRy,
+			},
+		}, nil
+
+	default:
+		return common.SyntaxTreeNode{}, parserError("unexpected token at Ra")
+	}
+}
+
+func parseRy(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+	switch currPointer.TokenKind {
+	case common.TokenAnd:
+		childAnd := common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenAnd,
+				Token:     "&&",
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}
+
+		movePointerToNextToken(input)
+		childRb, err := parseRb(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		childRy, err := parseRy(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "Ry>&& Rb Ry",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childAnd,
+				childRb,
+				childRy,
+			},
+		}, nil
+
+	case common.TokenOpenCurly:
+		fallthrough
+	case common.TokenCloseParanthesis:
+		fallthrough
+	case common.TokenComma:
+		fallthrough
+	case common.TokenLineEnd:
+		fallthrough
+	case common.TokenOr:
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "Ry",
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}, nil
+
+	default:
+		return common.SyntaxTreeNode{}, parserError("unexpected parse token in Rz")
+	}
+}
+
+func parseRb(input <-chan common.Token) (common.SyntaxTreeNode, error) {
+	switch currPointer.TokenKind {
+	case common.TokenNot:
+		childNot := common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenNot,
+				Token:     "!",
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}
+
+		movePointerToNextToken(input)
+		if currPointer.TokenKind != common.TokenOpenParanthesis {
+			return common.SyntaxTreeNode{}, parserError("There should be a paranthessis set after !")
+		}
+
+		movePointerToNextToken(input)
+		childR, err := parseR(input)
+		if err != nil {
+			return common.SyntaxTreeNode{}, err
+		}
+
+		if currPointer.TokenKind != common.TokenCloseParanthesis {
+			return common.SyntaxTreeNode{}, parserError("The paranthessis is not closed")
+		}
+
+		movePointerToNextToken(input)
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "Rb>!(R)",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childNot,
+				childR,
+			},
+		}, nil
+
+	case common.TokenIdent:
+		fallthrough
+	case common.TokenLiteralInt:
+		fallthrough
+	case common.TokenInput:
+		fallthrough
+	case common.TokenExpressionSub:
+		fallthrough
+	case common.TokenOpenParanthesis:
 		childE, err := parseE(input)
 		if err != nil {
 			return common.SyntaxTreeNode{}, err
 		}
-
 		childR1, err := parseR1(input)
 		if err != nil {
 			return common.SyntaxTreeNode{}, err
 		}
-
-		childENumber2, err := parseE(input)
 		return common.SyntaxTreeNode{
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
-				Token:     "R>E R1 E",
+				Token:     "Rb>ER1",
 			},
 			ChildNodes: []common.SyntaxTreeNode{
 				childE,
 				childR1,
-				childENumber2,
 			},
-		}, err
+		}, nil
+
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in R")
+		return common.SyntaxTreeNode{}, parserError("unexpected token in Rb")
 	}
 }
 
@@ -617,15 +838,46 @@ func parseR1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenRelationalGreaterThanOrEquals:
 		fallthrough
 	case common.TokenRelationalNotEquals:
-		child := common.SyntaxTreeNode{
+		childOperator := common.SyntaxTreeNode{
 			InnerToken: common.Token{
 				TokenKind: currPointer.TokenKind,
 				Token:     currPointer.Token,
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}
+
 		movePointerToNextToken(input)
-		return child, nil
+		childE, err := parseE(input)
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "R1>opE",
+			},
+			ChildNodes: []common.SyntaxTreeNode{
+				childOperator,
+				childE,
+			},
+		}, err
+
+	case common.TokenOr:
+		fallthrough
+	case common.TokenAnd:
+		fallthrough
+	case common.TokenCloseParanthesis:
+		fallthrough
+	case common.TokenOpenCurly:
+		fallthrough
+	case common.TokenComma:
+		fallthrough
+	case common.TokenLineEnd:
+		return common.SyntaxTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "R1",
+			},
+			ChildNodes: []common.SyntaxTreeNode{},
+		}, nil
+
 	default:
 		return common.SyntaxTreeNode{}, parserError("unexpected parse token in R1")
 	}
@@ -651,6 +903,10 @@ func parseE(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 
 func parseE1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	switch currPointer.TokenKind {
+	case common.TokenAnd:
+		fallthrough
+	case common.TokenOr:
+		fallthrough
 	case common.TokenRelationalLesserThan:
 		fallthrough
 	case common.TokenRelationalGreaterThan:
@@ -734,6 +990,10 @@ func parseT(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 
 func parseT1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	switch currPointer.TokenKind {
+	case common.TokenAnd:
+		fallthrough
+	case common.TokenOr:
+		fallthrough
 	case common.TokenRelationalLesserThan:
 		fallthrough
 	case common.TokenRelationalGreaterThan:
@@ -829,7 +1089,7 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}, nil
 	case common.TokenOpenParanthesis:
 		movePointerToNextToken(input)
-		childE, err := parseE(input)
+		childR, err := parseR(input)
 		if err != nil {
 			return common.SyntaxTreeNode{}, err
 		}
@@ -841,10 +1101,10 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		return common.SyntaxTreeNode{
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
-				Token:     "F>(E)",
+				Token:     "F>(R)",
 			},
 			ChildNodes: []common.SyntaxTreeNode{
-				childE,
+				childR,
 			},
 		}, nil
 	case common.TokenExpressionSub:

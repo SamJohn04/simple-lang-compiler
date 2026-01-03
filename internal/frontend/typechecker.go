@@ -68,7 +68,7 @@ func checkProgram(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 func checkNextInstruction(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 	switch input.ChildNodes[0].InnerToken.TokenKind {
 	case common.TokenIdent:
-		// v=E
+		// v=R
 		return checkReassignment(input)
 
 	// we do not need to store this information since all declarations get moved to the top of the file
@@ -98,7 +98,7 @@ func checkReassignment(input common.SyntaxTreeNode) (common.SyntaxTreeNode, erro
 	// v=E
 	childIdentifier := input.ChildNodes[0]
 	childEquals := input.ChildNodes[1]
-	childE, err := checkE(input.ChildNodes[2])
+	childR, err := checkR(input.ChildNodes[2])
 	if err != nil {
 		return common.SyntaxTreeNode{}, err
 	}
@@ -122,14 +122,14 @@ func checkReassignment(input common.SyntaxTreeNode) (common.SyntaxTreeNode, erro
 
 	if information.DataType == common.TypedUnkown {
 		IdentTable[childIdentifier.InnerToken.Token] = IdentifierInformation{
-			DataType: common.TypedInt, // TODO check E
+			DataType: common.TypedInt, // TODO check R
 			Mutable:  true,
 		}
 	}
 
 	childEquals.ChildNodes = []common.SyntaxTreeNode{
 		childIdentifier,
-		childE,
+		childR,
 	}
 
 	/*
@@ -163,7 +163,7 @@ func checkAssignmentAfterLet(input common.SyntaxTreeNode) (common.SyntaxTreeNode
 		// v = E
 		childIdentifier := input.ChildNodes[0]
 		childEquals := input.ChildNodes[1]
-		childE, err := checkE(input.ChildNodes[2])
+		childR, err := checkR(input.ChildNodes[2])
 		if err != nil {
 			return common.SyntaxTreeNode{}, err
 		}
@@ -181,7 +181,7 @@ func checkAssignmentAfterLet(input common.SyntaxTreeNode) (common.SyntaxTreeNode
 
 		childEquals.ChildNodes = []common.SyntaxTreeNode{
 			childIdentifier,
-			childE,
+			childR,
 		}
 
 		return childEquals, nil
@@ -222,7 +222,7 @@ func checkMutableAssignment(input, childIdentifier common.SyntaxTreeNode) (commo
 
 	case 2:
 		childEquals := input.ChildNodes[0]
-		childE, err := checkE(input.ChildNodes[1])
+		childR, err := checkR(input.ChildNodes[1])
 		if err != nil {
 			return common.SyntaxTreeNode{}, err
 		}
@@ -234,7 +234,7 @@ func checkMutableAssignment(input, childIdentifier common.SyntaxTreeNode) (commo
 
 		childEquals.ChildNodes = []common.SyntaxTreeNode{
 			childIdentifier,
-			childE,
+			childR,
 		}
 		return childEquals, nil
 
@@ -432,26 +432,94 @@ func checkOutputContinuation(input common.SyntaxTreeNode) (common.SyntaxTreeNode
 	if err != nil {
 		return common.SyntaxTreeNode{}, err
 	}
-	childE, err := checkE(input.ChildNodes[0])
+	childR, err := checkR(input.ChildNodes[0])
 	if err != nil {
 		return common.SyntaxTreeNode{}, err
 	}
 	input.ChildNodes = []common.SyntaxTreeNode{
-		childE,
+		childR,
 	}
 	input.ChildNodes = append(input.ChildNodes, childOutput.ChildNodes...)
 	return input, nil
 }
 
 func checkR(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	childRa, err := checkRa(input.ChildNodes[0])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+	return checkRz(input.ChildNodes[1], childRa)
+}
+
+func checkRz(input, calculationsUntilNow common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	if len(input.ChildNodes) == 0 {
+		return calculationsUntilNow, nil
+	}
+
+	childOr := input.ChildNodes[0]
+	childRa, err := checkRa(input.ChildNodes[1])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+
+	childOr.ChildNodes = []common.SyntaxTreeNode{
+		calculationsUntilNow,
+		childRa,
+	}
+
+	return checkRz(input.ChildNodes[2], childOr)
+}
+
+func checkRa(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	childRb, err := checkRb(input.ChildNodes[0])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+	return checkRy(input.ChildNodes[1], childRb)
+}
+
+func checkRy(input, calculationsUntilNow common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	if len(input.ChildNodes) == 0 {
+		return calculationsUntilNow, nil
+	}
+
+	childAnd := input.ChildNodes[0]
+	childRb, err := checkRb(input.ChildNodes[1])
+	if err != nil {
+		return common.SyntaxTreeNode{}, err
+	}
+
+	childAnd.ChildNodes = []common.SyntaxTreeNode{
+		calculationsUntilNow,
+		childRb,
+	}
+
+	return checkRy(input.ChildNodes[2], childAnd)
+}
+
+func checkRb(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	if input.ChildNodes[0].InnerToken.TokenKind == common.TokenNot {
+		childNot := input.ChildNodes[0]
+		childR, err := checkR(input.ChildNodes[1])
+		childNot.ChildNodes = []common.SyntaxTreeNode{
+			childR,
+		}
+		return childNot, err
+	}
+	if len(input.ChildNodes[1].ChildNodes) == 0 {
+		// R1 is empty
+		return checkE(input.ChildNodes[0])
+	}
 	/*
 		Converts
 			R
-			|\  \
-			E R1 E
+			|\
+			E R1
+			  | \
+			  op E
 
 		to this
-			R1
+			op
 			|\
 			E E
 	*/
@@ -459,8 +527,8 @@ func checkR(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 	if err != nil {
 		return common.SyntaxTreeNode{}, err
 	}
-	childOperator := input.ChildNodes[1]
-	secondChildE, err := checkE(input.ChildNodes[2])
+	childOperator := input.ChildNodes[1].ChildNodes[0]
+	secondChildE, err := checkE(input.ChildNodes[1].ChildNodes[1])
 	if err != nil {
 		return common.SyntaxTreeNode{}, err
 	}
@@ -525,6 +593,11 @@ func checkT1(input, calculationsUntilNow common.SyntaxTreeNode) (common.SyntaxTr
 }
 
 func checkF(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
+	if len(input.ChildNodes) == 0 {
+		return common.SyntaxTreeNode{}, typeCheckerInternalError(
+			fmt.Sprintf("children of F (%v) is 0; expects at least 1", input.InnerToken.Token),
+		)
+	}
 	switch input.ChildNodes[0].InnerToken.TokenKind {
 	case common.TokenExpressionSub:
 		childSub := input.ChildNodes[0]
