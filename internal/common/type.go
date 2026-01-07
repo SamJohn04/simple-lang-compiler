@@ -144,9 +144,9 @@ var Operators = map[TokenKind]string{
 type DataTypeOfIdentifier int
 
 const (
-	TypedInt  DataTypeOfIdentifier = iota + 1
-	TypedBool                      // WARN not implemented yet
-	TypedChar                      // WARN not implemented yet
+	TypedInt DataTypeOfIdentifier = iota + 1
+	TypedBool
+	TypedChar
 	TypedFloat
 	TypedString // WARN not implemented yet
 	TypedVoid   // WARN not implemented yet

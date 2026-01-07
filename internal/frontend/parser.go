@@ -573,6 +573,12 @@ func parseR(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		fallthrough
 	case common.TokenLiteralInt:
 		fallthrough
+	case common.TokenLiteralBool:
+		fallthrough
+	case common.TokenLiteralChar:
+		fallthrough
+	case common.TokenLiteralFloat:
+		fallthrough
 	case common.TokenOpenParanthesis:
 		fallthrough
 	case common.TokenInput:
@@ -664,6 +670,12 @@ func parseRa(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenIdent:
 		fallthrough
 	case common.TokenLiteralInt:
+		fallthrough
+	case common.TokenLiteralBool:
+		fallthrough
+	case common.TokenLiteralChar:
+		fallthrough
+	case common.TokenLiteralFloat:
 		fallthrough
 	case common.TokenOpenParanthesis:
 		fallthrough
@@ -795,6 +807,12 @@ func parseRb(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenIdent:
 		fallthrough
 	case common.TokenLiteralInt:
+		fallthrough
+	case common.TokenLiteralBool:
+		fallthrough
+	case common.TokenLiteralChar:
+		fallthrough
+	case common.TokenLiteralFloat:
 		fallthrough
 	case common.TokenInput:
 		fallthrough
@@ -1067,6 +1085,12 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 	case common.TokenIdent:
 		fallthrough
 	case common.TokenLiteralInt:
+		fallthrough
+	case common.TokenLiteralBool:
+		fallthrough
+	case common.TokenLiteralChar:
+		fallthrough
+	case common.TokenLiteralFloat:
 		fallthrough
 	case common.TokenInput:
 		child := common.SyntaxTreeNode{

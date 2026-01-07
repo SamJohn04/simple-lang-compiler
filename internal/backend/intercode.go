@@ -155,7 +155,13 @@ func generateForWhileStatement(input common.SyntaxTreeNode) ([]string, error) {
 func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error) {
 	switch input.InnerToken.TokenKind {
 	case common.TokenLiteralInt:
-		return []string{}, input.InnerToken.Token, nil
+		fallthrough
+	case common.TokenLiteralBool:
+		fallthrough
+	case common.TokenLiteralChar:
+		fallthrough
+	case common.TokenLiteralFloat:
+		fallthrough
 	case common.TokenIdent:
 		return []string{}, input.InnerToken.Token, nil
 	case common.TokenInput:

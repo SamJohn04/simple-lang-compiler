@@ -622,6 +622,12 @@ func checkF(input common.SyntaxTreeNode) (common.SyntaxTreeNode, error) {
 		fallthrough
 	case common.TokenLiteralInt:
 		fallthrough
+	case common.TokenLiteralBool:
+		fallthrough
+	case common.TokenLiteralChar:
+		fallthrough
+	case common.TokenLiteralFloat:
+		fallthrough
 	case common.TokenInput:
 		return input.ChildNodes[0], nil
 
