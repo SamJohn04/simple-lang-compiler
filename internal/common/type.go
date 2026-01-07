@@ -10,9 +10,9 @@ const (
 	TokenLiteralInt
 	TokenLiteralString
 
-	TokenLiteralBool  // WARN not implemented yet
-	TokenLiteralChar  // WARN not implemented yet
-	TokenLiteralFloat // WARN not implemented yet
+	TokenLiteralBool
+	TokenLiteralChar
+	TokenLiteralFloat
 
 	TokenAssignment
 
@@ -70,9 +70,9 @@ var NameMapWithTokenKind = map[TokenKind]string{
 	TokenLiteralInt:    "Literal Int",
 	TokenLiteralString: "Literal String",
 
-	TokenLiteralBool:  "Literal Bool",  // WARN not implemented yet
-	TokenLiteralChar:  "Literal Char",  // WARN not implemented yet
-	TokenLiteralFloat: "Literal Float", // WARN not implemented yet
+	TokenLiteralBool:  "Literal Bool",
+	TokenLiteralChar:  "Literal Char",
+	TokenLiteralFloat: "Literal Float",
 
 	TokenAssignment: "Assignment",
 
@@ -144,12 +144,12 @@ var Operators = map[TokenKind]string{
 type DataTypeOfIdentifier int
 
 const (
-	TypedInt    DataTypeOfIdentifier = iota + 1
-	TypedBool                        // WARN not implemented yet
-	TypedChar                        // WARN not implemented yet
-	TypedFloat                       // WARN not implemented yet
-	TypedString                      // WARN not implemented yet
-	TypedVoid                        // WARN not implemented yet
+	TypedInt  DataTypeOfIdentifier = iota + 1
+	TypedBool                      // WARN not implemented yet
+	TypedChar                      // WARN not implemented yet
+	TypedFloat
+	TypedString // WARN not implemented yet
+	TypedVoid   // WARN not implemented yet
 
 	TypedUnkown // What mut variables get typed as, before assignment
 )

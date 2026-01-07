@@ -47,177 +47,219 @@ func lexSegment(segment string) (common.Token, string) {
 			TokenKind: common.TokenEmpty,
 			Token:     "",
 		}, ""
-	} else if segment[0] == ';' {
+	}
+
+	switch segment[0] {
+	case ';':
 		return common.Token{
 			TokenKind: common.TokenLineEnd,
 			Token:     ";",
 		}, segment[1:]
-	} else if segment[0] == ',' {
+
+	case ',':
 		return common.Token{
 			TokenKind: common.TokenComma,
 			Token:     ",",
 		}, segment[1:]
-	} else if segment[0] == '(' {
+
+	case '(':
 		return common.Token{
 			TokenKind: common.TokenOpenParanthesis,
 			Token:     "(",
 		}, segment[1:]
-	} else if segment[0] == ')' {
+
+	case ')':
 		return common.Token{
 			TokenKind: common.TokenCloseParanthesis,
 			Token:     ")",
 		}, segment[1:]
-	} else if segment[0] == '{' {
+
+	case '{':
 		return common.Token{
 			TokenKind: common.TokenOpenCurly,
 			Token:     "{",
 		}, segment[1:]
-	} else if segment[0] == '}' {
+
+	case '}':
 		return common.Token{
 			TokenKind: common.TokenCloseCurly,
 			Token:     "}",
 		}, segment[1:]
-	} else if segment[0] == '+' {
+
+	case '+':
 		return common.Token{
 			TokenKind: common.TokenExpressionAdd,
 			Token:     "+",
 		}, segment[1:]
-	} else if segment[0] == '-' {
+
+	case '-':
 		return common.Token{
 			TokenKind: common.TokenExpressionSub,
 			Token:     "-",
 		}, segment[1:]
-	} else if segment[0] == '*' {
+
+	case '*':
 		return common.Token{
 			TokenKind: common.TokenExpressionMul,
 			Token:     "*",
 		}, segment[1:]
-	} else if segment[0] == '/' {
+
+	case '/':
 		return common.Token{
 			TokenKind: common.TokenExpressionDiv,
 			Token:     "/",
 		}, segment[1:]
-	} else if segment[0] == '%' {
+
+	case '%':
 		return common.Token{
 			TokenKind: common.TokenExpressionModulo,
 			Token:     "%",
 		}, segment[1:]
-	} else if len(segment) >= 2 && segment[:2] == "==" {
+
+	case '=':
+		if len(segment) < 2 || segment[1] != '=' {
+			return common.Token{
+				TokenKind: common.TokenAssignment,
+				Token:     "=",
+			}, segment[1:]
+		}
 		return common.Token{
 			TokenKind: common.TokenRelationalEquals,
 			Token:     "==",
 		}, segment[2:]
-	} else if len(segment) >= 2 && segment[:2] == "!=" {
-		return common.Token{
-			TokenKind: common.TokenRelationalNotEquals,
-			Token:     "!=",
-		}, segment[2:]
-	} else if len(segment) >= 2 && segment[:2] == ">=" {
-		return common.Token{
-			TokenKind: common.TokenRelationalGreaterThanOrEquals,
-			Token:     ">=",
-		}, segment[2:]
-	} else if len(segment) >= 2 && segment[:2] == "<=" {
+
+	case '<':
+		if len(segment) < 2 || segment[1] != '=' {
+			return common.Token{
+				TokenKind: common.TokenRelationalLesserThan,
+				Token:     "<",
+			}, segment[1:]
+		}
 		return common.Token{
 			TokenKind: common.TokenRelationalLesserThanOrEquals,
 			Token:     "<=",
 		}, segment[2:]
-	} else if segment[0] == '>' {
+
+	case '>':
+		if len(segment) < 2 || segment[1] != '=' {
+			return common.Token{
+				TokenKind: common.TokenRelationalGreaterThan,
+				Token:     ">",
+			}, segment[1:]
+		}
 		return common.Token{
-			TokenKind: common.TokenRelationalGreaterThan,
-			Token:     ">",
-		}, segment[1:]
-	} else if segment[0] == '<' {
+			TokenKind: common.TokenRelationalGreaterThanOrEquals,
+			Token:     ">=",
+		}, segment[2:]
+
+	case '!':
+		if len(segment) < 2 || segment[1] != '=' {
+			return common.Token{
+				TokenKind: common.TokenNot,
+				Token:     "!",
+			}, segment[1:]
+		}
 		return common.Token{
-			TokenKind: common.TokenRelationalLesserThan,
-			Token:     "<",
-		}, segment[1:]
-	} else if segment[0] == '=' {
-		return common.Token{
-			TokenKind: common.TokenAssignment,
-			Token:     "=",
-		}, segment[1:]
-	} else if segment[0] == '!' {
-		return common.Token{
-			TokenKind: common.TokenNot,
-			Token:     "!",
-		}, segment[1:]
-	} else if len(segment) >= 2 && segment[:2] == "&&" {
+			TokenKind: common.TokenRelationalNotEquals,
+			Token:     "!=",
+		}, segment[2:]
+
+	case '&':
+		if len(segment) < 2 || segment[1] != '&' {
+			// since no other cases exist
+			return common.Token{
+				TokenKind: common.TokenError,
+				Token:     segment,
+			}, ""
+		}
 		return common.Token{
 			TokenKind: common.TokenAnd,
 			Token:     "&&",
 		}, segment[2:]
-	} else if len(segment) >= 2 && segment[:2] == "||" {
+
+	case '|':
+		if len(segment) < 2 || segment[1] != '|' {
+			// since no other cases exist
+			return common.Token{
+				TokenKind: common.TokenError,
+				Token:     segment,
+			}, ""
+		}
 		return common.Token{
 			TokenKind: common.TokenOr,
 			Token:     "||",
 		}, segment[2:]
-	} else if len(segment) >= 2 && segment[:2] == "if" &&
-		(len(segment) == 2 || !isCharacterFromVariable(segment[2])) {
-		return common.Token{
-			TokenKind: common.TokenIf,
-			Token:     "if",
-		}, segment[2:]
-	} else if len(segment) >= 4 && segment[:4] == "else" &&
-		(len(segment) == 4 || !isCharacterFromVariable(segment[4])) {
-		return common.Token{
-			TokenKind: common.TokenElse,
-			Token:     "else",
-		}, segment[4:]
-	} else if len(segment) >= 5 && segment[:5] == "while" &&
-		(len(segment) == 5 || !isCharacterFromVariable(segment[5])) {
-		return common.Token{
-			TokenKind: common.TokenWhile,
-			Token:     "while",
-		}, segment[5:]
-	} else if len(segment) >= 5 && segment[:5] == "input" &&
-		(len(segment) == 5 || !isCharacterFromVariable(segment[5])) {
-		return common.Token{
-			TokenKind: common.TokenInput,
-			Token:     "input",
-		}, segment[5:]
-	} else if len(segment) >= 6 &&
-		segment[:6] == "output" && (len(segment) == 6 || !isCharacterFromVariable(segment[6])) {
-		return common.Token{
-			TokenKind: common.TokenOutput,
-			Token:     "output",
-		}, segment[6:]
-	} else if len(segment) >= 3 &&
-		segment[:3] == "let" && (len(segment) == 3 || !isCharacterFromVariable(segment[3])) {
-		return common.Token{
-			TokenKind: common.TokenLet,
-			Token:     "let",
-		}, segment[3:]
-	} else if len(segment) >= 3 &&
-		segment[:3] == "mut" && (len(segment) == 3 || !isCharacterFromVariable(segment[3])) {
-		return common.Token{
-			TokenKind: common.TokenMutable,
-			Token:     "mut",
-		}, segment[3:]
+
+	case 'i':
+		if isWordToken(segment, "if") {
+			return common.Token{
+				TokenKind: common.TokenIf,
+				Token:     "if",
+			}, segment[2:]
+		} else if isWordToken(segment, "input") {
+			return common.Token{
+				TokenKind: common.TokenInput,
+				Token:     "input",
+			}, segment[5:]
+		}
+		// outside switch for variable checks
+
+	case 'e':
+		if isWordToken(segment, "else") {
+			return common.Token{
+				TokenKind: common.TokenElse,
+				Token:     "else",
+			}, segment[4:]
+		}
+		// outside switch for variable checks
+
+	case 'w':
+		if isWordToken(segment, "while") {
+			return common.Token{
+				TokenKind: common.TokenWhile,
+				Token:     "while",
+			}, segment[5:]
+		}
+		// outside switch for variable checks
+
+	case 'o':
+		if isWordToken(segment, "output") {
+			return common.Token{
+				TokenKind: common.TokenOutput,
+				Token:     "output",
+			}, segment[6:]
+		}
+		// outside switch for variable checks
+
+	case 'l':
+		if isWordToken(segment, "let") {
+			return common.Token{
+				TokenKind: common.TokenLet,
+				Token:     "let",
+			}, segment[3:]
+		}
+		// outside switch for variable checks
+
+	case 'm':
+		if isWordToken(segment, "mut") {
+			return common.Token{
+				TokenKind: common.TokenMutable,
+				Token:     "mut",
+			}, segment[3:]
+		}
+		// outside switch for variable checks
 	}
 
+	// variable check
 	if isCharacterFromVariable(segment[0]) && !(segment[0] >= '0' && segment[0] <= '9') {
-		for i, c := range segment {
-			if c >= 'A' && c <= 'Z' {
-				continue
-			} else if c >= 'a' && c <= 'z' {
-				continue
-			} else if c >= '0' && c <= '9' {
-				continue
-			} else if c == '_' {
-				continue
-			}
-			return common.Token{
-				TokenKind: common.TokenIdent,
-				Token:     segment[:i],
-			}, segment[i:]
-		}
+		index := isVariableCharactersUntil(segment)
 		return common.Token{
 			TokenKind: common.TokenIdent,
-			Token:     segment,
-		}, ""
+			Token:     segment[:index],
+		}, segment[index:]
 	}
 
+	// string check
 	if segment[0] == '"' {
 		end := 0
 		for i, c := range segment[1:] {
@@ -234,30 +276,109 @@ func lexSegment(segment string) (common.Token, string) {
 		}
 		return common.Token{
 			TokenKind: common.TokenLiteralString,
-			Token:     segment[0:end],
+			Token:     segment[:end],
 		}, segment[end:]
 	}
 
-	if segment[0] >= '0' && segment[0] <= '9' {
-		for i, c := range segment {
-			if c >= '0' && c <= '9' {
-				continue
+	// character check
+	if segment[0] == '\'' {
+		if len(segment) < 3 {
+			return common.Token{
+				TokenKind: common.TokenError,
+				Token:     segment,
+			}, ""
+		}
+		switch segment[1] {
+		case '\'':
+			return common.Token{
+				TokenKind: common.TokenError,
+				Token:     segment,
+			}, ""
+
+		case '\\':
+			if len(segment) < 4 || segment[3] != '\'' {
+				return common.Token{
+					TokenKind: common.TokenError,
+					Token:     segment,
+				}, ""
 			}
 			return common.Token{
+				TokenKind: common.TokenLiteralChar,
+				Token:     segment[:4],
+			}, segment[4:]
+
+		default:
+			if segment[2] != '\'' {
+				return common.Token{
+					TokenKind: common.TokenError,
+					Token:     segment,
+				}, ""
+			}
+			return common.Token{
+				TokenKind: common.TokenLiteralChar,
+				Token:     segment[:3],
+			}, segment[3:]
+		}
+	}
+
+	// number check
+	if segment[0] >= '0' && segment[0] <= '9' {
+		index, fullstopIndex := isNumericCharactersUntil(segment)
+		if fullstopIndex == -1 {
+			return common.Token{
 				TokenKind: common.TokenLiteralInt,
-				Token:     segment[:i],
-			}, segment[i:]
+				Token:     segment[:index],
+			}, segment[index:]
 		}
 		return common.Token{
-			TokenKind: common.TokenLiteralInt,
-			Token:     segment,
-		}, ""
+			TokenKind: common.TokenLiteralFloat,
+			Token:     segment[:index],
+		}, segment[index:]
 	}
 
 	return common.Token{
 		TokenKind: common.TokenError,
 		Token:     segment,
 	}, ""
+}
+
+// Intended for multiple character tokens like if, mut, etc.
+// If the whole string matches, checks to see if the next character is not a variable token.
+func isWordToken(segment, token string) bool {
+	if !strings.HasPrefix(segment, token) {
+		return false
+	}
+	return len(segment) == len(token) || !isCharacterFromVariable(segment[len(token)])
+}
+
+// Returns the index of the first non-variable character.
+// Does not grant any special consideration to the first character,
+// i.e., the variable may be starting with a number.
+// Add a c < 0 || c > 9 check for the first character if necessary.
+func isVariableCharactersUntil(segment string) int {
+	for i := range len(segment) { // we cannot use i, c := range segment because of rune vs byte issues
+		if !isCharacterFromVariable(segment[i]) {
+			return i
+		}
+	}
+	return len(segment)
+}
+
+// Returns the index of the first non-numeric character and the '.' character (if it exists).
+// Returns on the second full stop as well as on any non-numeric characters.
+// If you need an integer, check the second value. If it is -1, use the first value, otherwise the second value.
+func isNumericCharactersUntil(segment string) (int, int) {
+	fullstopIndex := -1
+	for i, c := range segment {
+		if c >= '0' && c <= '9' {
+			continue
+		} else if c == '.' && fullstopIndex == -1 {
+			fullstopIndex = i
+			continue
+		}
+		return i, fullstopIndex
+	}
+	return len(segment), fullstopIndex
 }
 
 func isCharacterFromVariable(c byte) bool {
