@@ -202,7 +202,6 @@ func lexSegment(segment string) (common.Token, string) {
 				Token:     "input",
 			}, segment[5:]
 		}
-		// outside switch for variable checks
 
 	case 'e':
 		if isWordToken(segment, "else") {
@@ -211,7 +210,6 @@ func lexSegment(segment string) (common.Token, string) {
 				Token:     "else",
 			}, segment[4:]
 		}
-		// outside switch for variable checks
 
 	case 'w':
 		if isWordToken(segment, "while") {
@@ -220,7 +218,6 @@ func lexSegment(segment string) (common.Token, string) {
 				Token:     "while",
 			}, segment[5:]
 		}
-		// outside switch for variable checks
 
 	case 'o':
 		if isWordToken(segment, "output") {
@@ -229,7 +226,6 @@ func lexSegment(segment string) (common.Token, string) {
 				Token:     "output",
 			}, segment[6:]
 		}
-		// outside switch for variable checks
 
 	case 'l':
 		if isWordToken(segment, "let") {
@@ -238,7 +234,6 @@ func lexSegment(segment string) (common.Token, string) {
 				Token:     "let",
 			}, segment[3:]
 		}
-		// outside switch for variable checks
 
 	case 'm':
 		if isWordToken(segment, "mut") {
@@ -247,7 +242,22 @@ func lexSegment(segment string) (common.Token, string) {
 				Token:     "mut",
 			}, segment[3:]
 		}
-		// outside switch for variable checks
+
+	case 't':
+		if isWordToken(segment, "true") {
+			return common.Token{
+				TokenKind: common.TokenLiteralBool,
+				Token:     "true",
+			}, segment[4:]
+		}
+
+	case 'f':
+		if isWordToken(segment, "false") {
+			return common.Token{
+				TokenKind: common.TokenLiteralBool,
+				Token:     "false",
+			}, segment[5:]
+		}
 	}
 
 	// variable check

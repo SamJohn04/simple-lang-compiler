@@ -19,6 +19,7 @@ func CodeGenerator(input []string) (string, error) {
 	defined = []string{}
 
 	codes.WriteString("#include <stdio.h>\n")
+	codes.WriteString("#include <stdbool.h>\n")
 	codes.WriteString("int main(){\n")
 
 	for _, line := range input {
