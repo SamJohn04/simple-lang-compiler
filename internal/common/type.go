@@ -62,6 +62,8 @@ const (
 	// used by the parser, usually as a grouper
 	// specifics about the information in the Token string
 	TokenBlock
+	// used by typechecker to show that a variable is declared and not initialized here
+	TokenDeclare
 )
 
 var NameMapWithTokenKind = map[TokenKind]string{
@@ -119,7 +121,8 @@ var NameMapWithTokenKind = map[TokenKind]string{
 	TokenEmpty: "Empty Token",
 	TokenError: "Error Token",
 
-	TokenBlock: "Code Block",
+	TokenBlock:   "Code Block",
+	TokenDeclare: "declare",
 }
 
 var Operators = map[TokenKind]string{
@@ -144,15 +147,26 @@ var Operators = map[TokenKind]string{
 type DataTypeOfIdentifier int
 
 const (
-	TypedInt DataTypeOfIdentifier = iota + 1
+	TypedUnkown DataTypeOfIdentifier = iota // What mut variables get typed as, before assignment
+
+	TypedInt
 	TypedBool
 	TypedChar
 	TypedFloat
 	TypedString // WARN not implemented yet
 	TypedVoid   // WARN not implemented yet
-
-	TypedUnkown // What mut variables get typed as, before assignment
 )
+
+var NameMapWithType = map[DataTypeOfIdentifier]string{
+	TypedUnkown: "Unknown Type",
+
+	TypedInt:    "int",
+	TypedBool:   "bool",
+	TypedChar:   "char",
+	TypedFloat:  "float",
+	TypedString: "string",
+	TypedVoid:   "void",
+}
 
 type Token struct {
 	TokenKind TokenKind
@@ -162,6 +176,7 @@ type Token struct {
 type SyntaxTreeNode struct {
 	InnerToken Token
 	ChildNodes []SyntaxTreeNode
+	Datatype   DataTypeOfIdentifier
 }
 
 func (n SyntaxTreeNode) ShallowCopy() SyntaxTreeNode {
@@ -171,14 +186,20 @@ func (n SyntaxTreeNode) ShallowCopy() SyntaxTreeNode {
 			Token:     n.InnerToken.Token,
 		},
 		ChildNodes: n.ChildNodes,
+		Datatype:   n.Datatype,
 	}
 }
 
 func (n SyntaxTreeNode) Display(start string) {
-	fmt.Println(start, NameMapWithTokenKind[n.InnerToken.TokenKind], n.InnerToken.Token)
+	fmt.Println(start, NameMapWithTokenKind[n.InnerToken.TokenKind], n.InnerToken.Token, NameMapWithType[n.Datatype])
 	for _, t := range n.ChildNodes {
-		t.Display(start + "+")
+		t.Display(start + start)
 	}
+}
+
+type IdentifierInformation struct {
+	DataType DataTypeOfIdentifier
+	Mutable  bool
 }
 
 type UnderConstructionError struct {

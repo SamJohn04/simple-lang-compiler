@@ -32,19 +32,22 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	programRoot, err = frontend.TypeChecker(programRoot)
+	programRoot, identifierTable, err := frontend.TypeChecker(programRoot)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	intermediateCodes, err := backend.IntermediateCodeGenerator(programRoot)
+	intermediateCodes, err := backend.IntermediateCodeGenerator(
+		programRoot,
+		identifierTable,
+	)
 	if err != nil {
 		fmt.Println(strings.Join(intermediateCodes, "\n"))
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	finalCode, err := backend.CodeGenerator(intermediateCodes)
+	finalCode, err := backend.CodeGenerator(intermediateCodes, identifierTable)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

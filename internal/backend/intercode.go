@@ -6,23 +6,36 @@ import (
 	"github.com/SamJohn04/simple-lang-compiler/internal/common"
 )
 
-var (
-	numberOfIdentifiers int
-	numberOfGotos       int
-)
-
 // returns 3-Address Code
-func IntermediateCodeGenerator(input common.SyntaxTreeNode) ([]string, error) {
-	numberOfIdentifiers = 0
-	numberOfGotos = 0
+func IntermediateCodeGenerator(
+	input common.SyntaxTreeNode,
+	identifierTable map[string]common.IdentifierInformation,
+) ([]string, error) {
+	numberOfIdentifiers := 0
+	numberOfGotos := 0
 
-	return generateForProgram(input)
+	return generateForProgram(
+		input,
+		identifierTable,
+		&numberOfIdentifiers,
+		&numberOfGotos,
+	)
 }
 
-func generateForProgram(input common.SyntaxTreeNode) ([]string, error) {
+func generateForProgram(
+	input common.SyntaxTreeNode,
+	identifierTable map[string]common.IdentifierInformation,
+	numberOfIdentifiers,
+	numberOfGotos *int,
+) ([]string, error) {
 	intermediateCodes := []string{}
 	for _, child := range input.ChildNodes {
-		codesFromChild, err := generateNextInstructionSet(child)
+		codesFromChild, err := generateNextInstructionSet(
+			child,
+			identifierTable,
+			numberOfIdentifiers,
+			numberOfGotos,
+		)
 		if err != nil {
 			return intermediateCodes, err
 		}
@@ -31,15 +44,32 @@ func generateForProgram(input common.SyntaxTreeNode) ([]string, error) {
 	return intermediateCodes, nil
 }
 
-func generateNextInstructionSet(input common.SyntaxTreeNode) ([]string, error) {
+func generateNextInstructionSet(
+	input common.SyntaxTreeNode,
+	identifierTable map[string]common.IdentifierInformation,
+	numberOfIdentifiers,
+	numberOfGotos *int,
+) ([]string, error) {
 	if input.InnerToken.Token == "noop" {
-		// a noop operation, which could be due to declaring and not initialising an identifier
-		return []string{}, nil
+		// a noop operation
+		// as of right now, no flags like this should pass here
+		return []string{}, intermediateCodeGeneratorInternalError(
+			"found a noop statement when none should exist",
+		)
 	}
 	switch input.InnerToken.TokenKind {
+	case common.TokenDeclare:
+		// derived from mut v
+		return []string{}, nil
+
 	case common.TokenAssignment:
 		// v = E
-		codesFromChild, outputVariable, err := generateForExpression(input.ChildNodes[1])
+		codesFromChild, outputVariable, err := generateForExpression(
+			input.ChildNodes[1],
+			identifierTable,
+			numberOfIdentifiers,
+			numberOfGotos,
+		)
 		if err != nil {
 			return []string{}, err
 		}
@@ -51,18 +81,33 @@ func generateNextInstructionSet(input common.SyntaxTreeNode) ([]string, error) {
 
 	case common.TokenIf:
 		// if R { I } ...
-		return generateForIfStatement(input)
+		return generateForIfStatement(
+			input,
+			identifierTable,
+			numberOfIdentifiers,
+			numberOfGotos,
+		)
 
 	case common.TokenWhile:
 		// while R { I }
-		return generateForWhileStatement(input)
+		return generateForWhileStatement(
+			input,
+			identifierTable,
+			numberOfIdentifiers,
+			numberOfGotos,
+		)
 
 	case common.TokenOutput:
 		// output str C
 		codes := []string{}
 		param := []string{input.ChildNodes[0].InnerToken.Token}
 		for _, child := range input.ChildNodes[1:] {
-			codesFromChild, outputVariable, err := generateForExpression(child)
+			codesFromChild, outputVariable, err := generateForExpression(
+				child,
+				identifierTable,
+				numberOfIdentifiers,
+				numberOfGotos,
+			)
 			if err != nil {
 				return []string{}, err
 			}
@@ -85,7 +130,12 @@ func generateNextInstructionSet(input common.SyntaxTreeNode) ([]string, error) {
 	}
 }
 
-func generateForIfStatement(input common.SyntaxTreeNode) ([]string, error) {
+func generateForIfStatement(
+	input common.SyntaxTreeNode,
+	identifierTable map[string]common.IdentifierInformation,
+	numberOfIdentifiers,
+	numberOfGotos *int,
+) ([]string, error) {
 	// if the condition is true goto L1
 	// goto L2
 	// L1: --- if block ---
@@ -96,26 +146,41 @@ func generateForIfStatement(input common.SyntaxTreeNode) ([]string, error) {
 	// LX-1: --- else block --- \\ if it exists
 	// LX: --- continue ---
 	codes := []string{}
-	finalGotoLink := getNextGoto()
+	finalGotoLink := getNextGoto(numberOfGotos)
 	for _, child := range input.ChildNodes {
 		if child.InnerToken.TokenKind == common.TokenElse {
-			childCodes, err := generateForProgram(child.ChildNodes[0])
+			childCodes, err := generateForProgram(
+				child.ChildNodes[0],
+				identifierTable,
+				numberOfIdentifiers,
+				numberOfGotos,
+			)
 			if err != nil {
 				return []string{}, err
 			}
 			codes = append(codes, childCodes...)
 			break
 		}
-		codesFromRelation, identifier, err := generateForExpression(child.ChildNodes[0])
+		codesFromRelation, identifier, err := generateForExpression(
+			child.ChildNodes[0],
+			identifierTable,
+			numberOfIdentifiers,
+			numberOfGotos,
+		)
 		if err != nil {
 			return []string{}, err
 		}
-		childCodes, err := generateForProgram(child.ChildNodes[1])
+		childCodes, err := generateForProgram(
+			child.ChildNodes[1],
+			identifierTable,
+			numberOfIdentifiers,
+			numberOfGotos,
+		)
 		if err != nil {
 			return []string{}, err
 		}
-		holdGoto := getNextGoto()
-		nextGoto := getNextGoto()
+		holdGoto := getNextGoto(numberOfGotos)
+		nextGoto := getNextGoto(numberOfGotos)
 		codes = append(codes, codesFromRelation...)
 		codes = append(codes, fmt.Sprintf("if %v goto %v", identifier, holdGoto))
 		codes = append(codes, fmt.Sprintf("goto %v", nextGoto))
@@ -128,16 +193,31 @@ func generateForIfStatement(input common.SyntaxTreeNode) ([]string, error) {
 	return codes, nil
 }
 
-func generateForWhileStatement(input common.SyntaxTreeNode) ([]string, error) {
-	whileGoto := getNextGoto()
-	holdGoto := getNextGoto()
-	nextGoto := getNextGoto()
+func generateForWhileStatement(
+	input common.SyntaxTreeNode,
+	identifierTable map[string]common.IdentifierInformation,
+	numberOfIdentifiers,
+	numberOfGotos *int,
+) ([]string, error) {
+	whileGoto := getNextGoto(numberOfGotos)
+	holdGoto := getNextGoto(numberOfGotos)
+	nextGoto := getNextGoto(numberOfGotos)
 	codes := []string{fmt.Sprintf("%v:", whileGoto)}
-	codesFromRelation, identifier, err := generateForExpression(input.ChildNodes[0])
+	codesFromRelation, identifier, err := generateForExpression(
+		input.ChildNodes[0],
+		identifierTable,
+		numberOfIdentifiers,
+		numberOfGotos,
+	)
 	if err != nil {
 		return []string{}, err
 	}
-	childCodes, err := generateForProgram(input.ChildNodes[1])
+	childCodes, err := generateForProgram(
+		input.ChildNodes[1],
+		identifierTable,
+		numberOfIdentifiers,
+		numberOfGotos,
+	)
 	if err != nil {
 		return childCodes, err
 	}
@@ -152,7 +232,12 @@ func generateForWhileStatement(input common.SyntaxTreeNode) ([]string, error) {
 	return codes, nil
 }
 
-func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error) {
+func generateForExpression(
+	input common.SyntaxTreeNode,
+	identifierTable map[string]common.IdentifierInformation,
+	numberOfIdentifiers,
+	numberOfGotos *int,
+) ([]string, string, error) {
 	switch input.InnerToken.TokenKind {
 	case common.TokenLiteralInt:
 		fallthrough
@@ -165,7 +250,11 @@ func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error
 	case common.TokenIdent:
 		return []string{}, input.InnerToken.Token, nil
 	case common.TokenInput:
-		identifier := getNextIdentifier()
+		identifier := getNextIdentifier(numberOfIdentifiers)
+		identifierTable[identifier] = common.IdentifierInformation{
+			DataType: input.Datatype,
+			Mutable:  false,
+		}
 		codes := []string{
 			fmt.Sprintf(
 				"%v = input",
@@ -179,22 +268,31 @@ func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error
 	case common.TokenExpressionSub:
 		if len(input.ChildNodes) == 1 {
 			// t = op t
-			childCodes, outputVariable, err := generateForExpression(input.ChildNodes[0])
+			childCodes, outputVariable, err := generateForExpression(
+				input.ChildNodes[0],
+				identifierTable,
+				numberOfIdentifiers,
+				numberOfGotos,
+			)
 			if err != nil {
 				return []string{}, "", err
 			}
 
-			nextIdentifier := getNextIdentifier()
+			identifier := getNextIdentifier(numberOfIdentifiers)
+			identifierTable[identifier] = common.IdentifierInformation{
+				DataType: input.Datatype,
+				Mutable:  false,
+			}
 			childCodes = append(
 				childCodes,
 				fmt.Sprintf(
 					"%v = %v %v",
-					nextIdentifier,
+					identifier,
 					common.Operators[common.TokenNot],
 					outputVariable,
 				),
 			)
-			return childCodes, nextIdentifier, nil
+			return childCodes, identifier, nil
 		}
 		fallthrough
 	case common.TokenExpressionAdd:
@@ -221,16 +319,30 @@ func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error
 		fallthrough
 	case common.TokenOr:
 		// t = t op t
-		firstChildCodes, firstOutputVariable, err := generateForExpression(input.ChildNodes[0])
+		firstChildCodes, firstOutputVariable, err := generateForExpression(
+			input.ChildNodes[0],
+			identifierTable,
+			numberOfIdentifiers,
+			numberOfGotos,
+		)
 		if err != nil {
 			return []string{}, "", err
 		}
-		secondChildCodes, secondOutputVariable, err := generateForExpression(input.ChildNodes[1])
+		secondChildCodes, secondOutputVariable, err := generateForExpression(
+			input.ChildNodes[1],
+			identifierTable,
+			numberOfIdentifiers,
+			numberOfGotos,
+		)
 		if err != nil {
 			return []string{}, "", err
 		}
 
-		nextIdentifier := getNextIdentifier()
+		identifier := getNextIdentifier(numberOfIdentifiers)
+		identifierTable[identifier] = common.IdentifierInformation{
+			DataType: input.Datatype,
+			Mutable:  false,
+		}
 		codes := []string{}
 		codes = append(codes, firstChildCodes...)
 		codes = append(codes, secondChildCodes...)
@@ -238,13 +350,13 @@ func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error
 			codes,
 			fmt.Sprintf(
 				"%v = %v %v %v",
-				nextIdentifier,
+				identifier,
 				firstOutputVariable,
 				common.Operators[input.InnerToken.TokenKind],
 				secondOutputVariable,
 			),
 		)
-		return codes, nextIdentifier, nil
+		return codes, identifier, nil
 
 	default:
 		return []string{}, "", intermediateCodeGeneratorInternalError(
@@ -256,14 +368,14 @@ func generateForExpression(input common.SyntaxTreeNode) ([]string, string, error
 	}
 }
 
-func getNextGoto() string {
-	numberOfGotos++
-	return fmt.Sprintf("L%d", numberOfGotos)
+func getNextGoto(numberOfGotos *int) string {
+	(*numberOfGotos)++
+	return fmt.Sprintf("L%d", *numberOfGotos)
 }
 
-func getNextIdentifier() string {
-	numberOfIdentifiers++
-	return fmt.Sprintf("t%d", numberOfIdentifiers)
+func getNextIdentifier(numberOfIdentifiers *int) string {
+	(*numberOfIdentifiers)++
+	return fmt.Sprintf("t%d", *numberOfIdentifiers)
 }
 
 func intermediateCodeGeneratorInternalError(message string) *common.InternalError {

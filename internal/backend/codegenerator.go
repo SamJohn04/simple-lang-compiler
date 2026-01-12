@@ -2,25 +2,37 @@ package backend
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/SamJohn04/simple-lang-compiler/internal/common"
 )
 
-var defined []string
-
 // we are compiling to C
-func CodeGenerator(input []string) (string, error) {
+func CodeGenerator(
+	input []string,
+	identifierTable map[string]common.IdentifierInformation,
+) (string, error) {
 	codes := strings.Builder{}
 	buffer := []string{}
 	var err error
 
-	defined = []string{}
-
 	codes.WriteString("#include <stdio.h>\n")
 	codes.WriteString("#include <stdbool.h>\n")
 	codes.WriteString("int main(){\n")
+
+	for identifier, information := range identifierTable {
+		if information.DataType == common.TypedUnkown {
+			// this can only be introduced into the program
+			// by declaring and not initialising a value
+			continue
+		}
+		fmt.Fprintf(
+			&codes,
+			"%v %v;",
+			common.NameMapWithType[information.DataType],
+			identifier,
+		)
+	}
 
 	for _, line := range input {
 		buffer, err = writeCodeForLine(&codes, line, buffer)
@@ -69,11 +81,6 @@ func writeCodeForLine(codes *strings.Builder, line string, buffer []string) ([]s
 		}
 		codes.WriteString(");")
 		return []string{}, nil
-	}
-
-	if !slices.Contains(defined, words[0]) {
-		fmt.Fprintf(codes, "int %v;", words[0])
-		defined = append(defined, words[0])
 	}
 
 	if words[1] != "=" {
