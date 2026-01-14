@@ -86,6 +86,18 @@ func lexSegment(segment string) (common.Token, string) {
 			Token:     "}",
 		}, segment[1:]
 
+	case '[':
+		return common.Token{
+			TokenKind: common.TokenOpenSquareBraces,
+			Token:     "[",
+		}, segment[1:]
+
+	case ']':
+		return common.Token{
+			TokenKind: common.TokenCloseSquareBraces,
+			Token:     "]",
+		}, segment[1:]
+
 	case '+':
 		return common.Token{
 			TokenKind: common.TokenExpressionAdd,

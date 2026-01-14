@@ -47,6 +47,9 @@ const (
 	TokenOpenCurly
 	TokenCloseCurly
 
+	TokenOpenSquareBraces
+	TokenCloseSquareBraces
+
 	TokenInput
 	TokenOutput
 
@@ -108,6 +111,9 @@ var NameMapWithTokenKind = map[TokenKind]string{
 
 	TokenOpenCurly:  "Open Curly Braces",
 	TokenCloseCurly: "Close Curly Braces",
+
+	TokenOpenSquareBraces:  "Open Square Braces",
+	TokenCloseSquareBraces: "Close Square Braces",
 
 	TokenInput:  "input",
 	TokenOutput: "output",

@@ -75,7 +75,11 @@ func generateNextInstructionSet(
 		}
 		codesFromChild = append(
 			codesFromChild,
-			fmt.Sprintf("%v = %v", input.ChildNodes[0].InnerToken.Token, outputVariable),
+			fmt.Sprintf(
+				"%v = %v",
+				input.ChildNodes[0].InnerToken.Token,
+				outputVariable,
+			),
 		)
 		return codesFromChild, nil
 
