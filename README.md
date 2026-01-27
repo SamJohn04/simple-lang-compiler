@@ -56,3 +56,7 @@ while i < n {
 output "%d", i;
 output "%d", n;
 ```
+
+## Output
+
+The compiler converts the given code to C-language. As such, do not use any keywords in C as identifiers.
