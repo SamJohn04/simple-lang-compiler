@@ -363,6 +363,7 @@ func parseElseCondition(input <-chan common.Token) (common.SyntaxTreeNode, error
 				childI7,
 			},
 		}, nil
+
 	case common.TokenLineEnd:
 		// I4 -> epsilon
 		return common.SyntaxTreeNode{
@@ -372,6 +373,7 @@ func parseElseCondition(input <-chan common.Token) (common.SyntaxTreeNode, error
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
+
 	default:
 		return common.SyntaxTreeNode{}, parserError("'else' or ';' expected")
 	}
@@ -422,6 +424,7 @@ func parseElseIf(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				childI4,
 			},
 		}, err
+
 	case common.TokenOpenCurly:
 		// I7 -> { I }
 		movePointerToNextToken(input)
@@ -444,6 +447,7 @@ func parseElseIf(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				childI,
 			},
 		}, nil
+
 	default:
 		return common.SyntaxTreeNode{}, parserError("'if' or '{' expected")
 	}
@@ -545,6 +549,7 @@ func parseOutputContinuation(input <-chan common.Token) (common.SyntaxTreeNode, 
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
+
 	case common.TokenComma:
 		movePointerToNextToken(input)
 		childR, err := parseR(input)
@@ -562,6 +567,7 @@ func parseOutputContinuation(input <-chan common.Token) (common.SyntaxTreeNode, 
 				childC,
 			},
 		}, err
+
 	default:
 		return common.SyntaxTreeNode{}, parserError("',' or ';' expected")
 	}
@@ -606,6 +612,7 @@ func parseR(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				childRz,
 			},
 		}, nil
+
 	default:
 		return common.SyntaxTreeNode{}, parserError("unexpected token in relation")
 	}
@@ -952,6 +959,7 @@ func parseE1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
+
 	case common.TokenExpressionAdd:
 		fallthrough
 	case common.TokenExpressionSub:
@@ -982,6 +990,7 @@ func parseE1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				childE1,
 			},
 		}, err
+
 	default:
 		return common.SyntaxTreeNode{}, parserError("unexpected token in expression")
 	}
@@ -1043,6 +1052,7 @@ func parseT1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
+
 	case common.TokenExpressionMul:
 		fallthrough
 	case common.TokenExpressionDiv:
@@ -1075,6 +1085,7 @@ func parseT1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				childT1,
 			},
 		}, nil
+
 	default:
 		return common.SyntaxTreeNode{}, parserError("unexpected token in expression")
 	}
@@ -1111,6 +1122,7 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				child,
 			},
 		}, nil
+
 	case common.TokenOpenParanthesis:
 		movePointerToNextToken(input)
 		childR, err := parseR(input)
@@ -1131,6 +1143,7 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				childR,
 			},
 		}, nil
+
 	case common.TokenExpressionSub:
 		childSub := common.SyntaxTreeNode{
 			InnerToken: common.Token{
@@ -1152,6 +1165,7 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 				childF,
 			},
 		}, err
+
 	default:
 		return common.SyntaxTreeNode{}, parserError("unexpected token in expression")
 	}
