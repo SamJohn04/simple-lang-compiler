@@ -240,7 +240,7 @@ func parseAssignmentAfterLet(input <-chan common.Token) (common.SyntaxTreeNode, 
 		}, err
 
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I6")
+		return common.SyntaxTreeNode{}, parserError("variable or 'mut' expected")
 	}
 }
 
@@ -373,7 +373,7 @@ func parseElseCondition(input <-chan common.Token) (common.SyntaxTreeNode, error
 			ChildNodes: []common.SyntaxTreeNode{},
 		}, nil
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I4; expecting else or ;")
+		return common.SyntaxTreeNode{}, parserError("'else' or ';' expected")
 	}
 }
 
@@ -445,7 +445,7 @@ func parseElseIf(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 		}, nil
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in I7")
+		return common.SyntaxTreeNode{}, parserError("'if' or '{' expected")
 	}
 }
 
@@ -563,7 +563,7 @@ func parseOutputContinuation(input <-chan common.Token) (common.SyntaxTreeNode, 
 			},
 		}, err
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in C")
+		return common.SyntaxTreeNode{}, parserError("',' or ';' expected")
 	}
 }
 
@@ -607,7 +607,7 @@ func parseR(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 		}, nil
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in R")
+		return common.SyntaxTreeNode{}, parserError("unexpected token in relation")
 	}
 }
 
@@ -661,7 +661,7 @@ func parseRz(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}, nil
 
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in Rz")
+		return common.SyntaxTreeNode{}, parserError("unexpected token in relation")
 	}
 }
 
@@ -706,7 +706,7 @@ func parseRa(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}, nil
 
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected token at Ra")
+		return common.SyntaxTreeNode{}, parserError("unexpected token in relation")
 	}
 }
 
@@ -762,7 +762,7 @@ func parseRy(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}, nil
 
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in Rz")
+		return common.SyntaxTreeNode{}, parserError("unexpected token in relation")
 	}
 }
 
@@ -839,7 +839,7 @@ func parseRb(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}, nil
 
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected token in Rb")
+		return common.SyntaxTreeNode{}, parserError("unexpected token in relation")
 	}
 }
 
@@ -897,7 +897,7 @@ func parseR1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 		}, nil
 
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in R1")
+		return common.SyntaxTreeNode{}, parserError("unexpected token in relation")
 	}
 }
 
@@ -983,7 +983,7 @@ func parseE1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 		}, err
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in E1")
+		return common.SyntaxTreeNode{}, parserError("unexpected token in expression")
 	}
 }
 
@@ -1076,7 +1076,7 @@ func parseT1(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 		}, nil
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in T1")
+		return common.SyntaxTreeNode{}, parserError("unexpected token in expression")
 	}
 }
 
@@ -1118,7 +1118,7 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			return common.SyntaxTreeNode{}, err
 		}
 		if currPointer.TokenKind != common.TokenCloseParanthesis {
-			return common.SyntaxTreeNode{}, parserError("unexpected parse token in F")
+			return common.SyntaxTreeNode{}, parserError("')' expected")
 		}
 
 		movePointerToNextToken(input)
@@ -1153,7 +1153,7 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 			},
 		}, err
 	default:
-		return common.SyntaxTreeNode{}, parserError("unexpected parse token in F")
+		return common.SyntaxTreeNode{}, parserError("unexpected token in expression")
 	}
 }
 
