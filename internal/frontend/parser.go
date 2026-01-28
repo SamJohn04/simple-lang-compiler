@@ -1158,6 +1158,7 @@ func parseF(input <-chan common.Token) (common.SyntaxTreeNode, error) {
 }
 
 func movePointerToNextToken(input <-chan common.Token) {
+	// defined earlier so that := will not create currPointer as well
 	var ok bool
 	currPointer, ok = <-input
 	if !ok {
