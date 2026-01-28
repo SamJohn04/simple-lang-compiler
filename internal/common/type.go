@@ -175,8 +175,9 @@ var NameMapWithType = map[DataTypeOfIdentifier]string{
 }
 
 type Token struct {
-	TokenKind TokenKind
-	Token     string
+	LineNumber int
+	TokenKind  TokenKind
+	Token      string
 }
 
 type SyntaxTreeNode struct {

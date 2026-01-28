@@ -115,6 +115,7 @@ func checkReassignment(
 				"Identifier %v has not been declared",
 				childIdentifier.InnerToken.Token,
 			),
+			childIdentifier.InnerToken.LineNumber,
 		)
 	} else if !information.Mutable {
 		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
@@ -122,6 +123,7 @@ func checkReassignment(
 				"Identifier %v was not marked as mutable (mut keyword) and was reassigned",
 				childIdentifier.InnerToken.Token,
 			),
+			childIdentifier.InnerToken.LineNumber,
 		)
 	} else if information.DataType == common.TypedUnkown {
 		identifierTable[childIdentifier.InnerToken.Token] = common.IdentifierInformation{
@@ -135,6 +137,7 @@ func checkReassignment(
 				common.NameMapWithType[information.DataType],
 				common.NameMapWithType[childR.Datatype],
 			),
+			childIdentifier.InnerToken.LineNumber,
 		)
 	}
 
@@ -189,6 +192,7 @@ func checkAssignmentAfterLet(
 		if ok {
 			return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 				fmt.Sprintf("redeclaring existing variable \"%v\"", childIdentifier.InnerToken.Token),
+				childIdentifier.InnerToken.LineNumber,
 			)
 		}
 		identifierTable[childIdentifier.InnerToken.Token] = common.IdentifierInformation{
@@ -212,6 +216,7 @@ func checkAssignmentAfterLet(
 		if ok {
 			return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 				fmt.Sprintf("redeclaring existing variable \"%v\"", childIdentifier.InnerToken.Token),
+				childIdentifier.InnerToken.LineNumber,
 			)
 		}
 		identifierTable[childIdentifier.InnerToken.Token] = common.IdentifierInformation{
@@ -280,6 +285,7 @@ func checkIf(
 	if childR.Datatype != common.TypedBool {
 		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 			"if has non-boolean expression as condition",
+			childR.InnerToken.LineNumber,
 		)
 	}
 	childI, err := checkProgram(input.ChildNodes[2], identifierTable)
@@ -372,6 +378,7 @@ func checkElseIf(
 		if childR.Datatype != common.TypedBool {
 			return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 				"else if has non-boolean expression as condition",
+				childR.InnerToken.LineNumber,
 			)
 		}
 		childI, err := checkProgram(input.ChildNodes[2], identifierTable)
@@ -448,6 +455,7 @@ func checkWhile(
 	if childR.Datatype != common.TypedBool {
 		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 			"non-boolean expression in while",
+			childR.InnerToken.LineNumber,
 		)
 	}
 	childI, err := checkProgram(input.ChildNodes[2], identifierTable)
@@ -525,6 +533,7 @@ func checkRz(
 	if calculationsUntilNow.Datatype != common.TypedBool {
 		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 			"|| relations must have boolean children",
+			calculationsUntilNow.InnerToken.LineNumber,
 		)
 	}
 
@@ -536,6 +545,7 @@ func checkRz(
 	if childRa.Datatype != common.TypedBool {
 		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 			"|| relations must have boolean children",
+			childRa.InnerToken.LineNumber,
 		)
 	}
 
@@ -569,6 +579,7 @@ func checkRy(
 	if calculationsUntilNow.Datatype != common.TypedBool {
 		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 			"&& relations must have boolean children",
+			calculationsUntilNow.InnerToken.LineNumber,
 		)
 	}
 
@@ -580,6 +591,7 @@ func checkRy(
 	if childRb.Datatype != common.TypedBool {
 		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 			"&& relations must have boolean children",
+			childRb.InnerToken.LineNumber,
 		)
 	}
 
@@ -601,6 +613,7 @@ func checkRb(
 		if childR.Datatype != common.TypedBool {
 			return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 				"! relation must have a boolean child",
+				childR.InnerToken.LineNumber,
 			)
 		}
 
@@ -670,6 +683,7 @@ func checkE1(
 		calculationsUntilNow.Datatype != common.TypedFloat {
 		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 			"only int, float, and char types can be used in mathematical expressions",
+			calculationsUntilNow.InnerToken.LineNumber,
 		)
 	}
 
@@ -684,6 +698,7 @@ func checkE1(
 		childT.Datatype != common.TypedFloat {
 		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 			"only int, float, and char types can be used in mathematical expressions",
+			childT.InnerToken.LineNumber,
 		)
 	}
 
@@ -725,6 +740,7 @@ func checkT1(
 		calculationsUntilNow.Datatype != common.TypedFloat {
 		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 			"only int, float, and char types can be used in mathematical expressions",
+			calculationsUntilNow.InnerToken.LineNumber,
 		)
 	}
 
@@ -739,6 +755,7 @@ func checkT1(
 		childF.Datatype != common.TypedFloat {
 		return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 			"only int, float, and char types can be used in mathematical expressions",
+			childF.InnerToken.LineNumber,
 		)
 	}
 
@@ -766,7 +783,7 @@ func checkF(
 ) (common.SyntaxTreeNode, error) {
 	if len(input.ChildNodes) == 0 {
 		return common.SyntaxTreeNode{}, typeCheckerInternalError(
-			fmt.Sprintf("children of F (%v) is 0; expects at least 1", input.InnerToken.Token),
+			"children of F is 0; expects at least 1",
 		)
 	}
 	switch input.ChildNodes[0].InnerToken.TokenKind {
@@ -792,6 +809,7 @@ func checkF(
 			childF.Datatype != common.TypedFloat {
 			return common.SyntaxTreeNode{}, typeCheckerCompilationError(
 				"only int, char, and float types work with negation",
+				childF.InnerToken.LineNumber,
 			)
 		}
 
@@ -816,7 +834,10 @@ func checkF(
 	case common.TokenIdent:
 		information, ok := identifierTable[input.ChildNodes[0].InnerToken.Token]
 		if !ok || information.DataType == common.TypedUnkown {
-			return common.SyntaxTreeNode{}, typeCheckerCompilationError("use of identifier without declaring")
+			return common.SyntaxTreeNode{}, typeCheckerCompilationError(
+				"use of identifier without declaring",
+				input.ChildNodes[0].InnerToken.LineNumber,
+			)
 		}
 
 		childIdent := input.ChildNodes[0]
@@ -845,7 +866,7 @@ func checkF(
 
 	case common.TokenInput:
 		childInput := input.ChildNodes[0]
-		// change this based on input type
+		// TODO change this based on input type
 		childInput.Datatype = common.TypedInt
 		return childInput, nil
 
@@ -854,10 +875,10 @@ func checkF(
 	}
 }
 
-func typeCheckerCompilationError(message string) *common.CompilationError {
+func typeCheckerCompilationError(message string, lineNumber int) *common.CompilationError {
 	return &common.CompilationError{
 		PointOfFailure: "Type Checker",
-		Message:        message,
+		Message:        fmt.Sprintf("%v at line number %v", message, lineNumber),
 	}
 }
 

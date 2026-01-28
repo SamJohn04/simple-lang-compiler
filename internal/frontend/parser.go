@@ -1171,6 +1171,11 @@ func movePointerToNextToken(input <-chan common.Token) {
 func parserError(message string) *common.CompilationError {
 	return &common.CompilationError{
 		PointOfFailure: "Parser",
-		Message:        message + " at " + currPointer.Token,
+		Message: fmt.Sprintf(
+			"%v at %v (line number %v)",
+			message,
+			currPointer.Token,
+			currPointer.LineNumber,
+		),
 	}
 }
