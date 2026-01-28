@@ -318,6 +318,7 @@ func lexSegment(segment string) (common.Token, string) {
 			}, ""
 
 		case '\\':
+			// verify the closing quotes
 			if len(segment) < 4 || segment[3] != '\'' {
 				return common.Token{
 					TokenKind: common.TokenError,
@@ -386,6 +387,10 @@ func isVariableCharactersUntil(segment string) int {
 	return len(segment)
 }
 
+func isCharacterFromVariable(c byte) bool {
+	return c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_'
+}
+
 // Returns the index of the first non-numeric character and the '.' character (if it exists).
 // Returns on the second full stop as well as on any non-numeric characters.
 // If you need an integer, check the second value. If it is -1, use the first value, otherwise the second value.
@@ -401,8 +406,4 @@ func isNumericCharactersUntil(segment string) (int, int) {
 		return i, fullstopIndex
 	}
 	return len(segment), fullstopIndex
-}
-
-func isCharacterFromVariable(c byte) bool {
-	return c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_'
 }
