@@ -32,6 +32,9 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	programRoot.Display(">")
+	// return since remaining is not done
+	return
 	programRoot, identifierTable, err := frontend.TypeChecker(programRoot)
 	if err != nil {
 		fmt.Println(err)

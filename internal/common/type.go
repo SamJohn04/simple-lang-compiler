@@ -200,7 +200,7 @@ func (n SyntaxTreeNode) ShallowCopy() SyntaxTreeNode {
 func (n SyntaxTreeNode) Display(start string) {
 	fmt.Println(start, NameMapWithTokenKind[n.InnerToken.TokenKind], n.InnerToken.Token, NameMapWithType[n.Datatype])
 	for _, t := range n.ChildNodes {
-		t.Display(start + start)
+		t.Display(start + ">")
 	}
 }
 
