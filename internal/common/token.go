@@ -1,6 +1,10 @@
 package common
 
-import "fmt"
+type Token struct {
+	LineNumber int
+	TokenKind  TokenKind
+	Token      string
+}
 
 type TokenKind int
 
@@ -150,63 +154,10 @@ var Operators = map[TokenKind]string{
 	TokenNot: "!",
 }
 
-type DataTypeOfIdentifier int
-
-const (
-	TypedUnkown DataTypeOfIdentifier = iota // What mut variables get typed as, before assignment
-
-	TypedInt
-	TypedBool
-	TypedChar
-	TypedFloat
-	TypedString // WARN not implemented yet
-	TypedVoid   // WARN not implemented yet
-)
-
-var NameMapWithType = map[DataTypeOfIdentifier]string{
-	TypedUnkown: "Unknown Type",
-
-	TypedInt:    "int",
-	TypedBool:   "bool",
-	TypedChar:   "char",
-	TypedFloat:  "float",
-	TypedString: "string",
-	TypedVoid:   "void",
-}
-
-type Token struct {
-	LineNumber int
-	TokenKind  TokenKind
-	Token      string
-}
-
-type SyntaxTreeNode struct {
-	InnerToken Token
-	ChildNodes []SyntaxTreeNode
-	Datatype   DataTypeOfIdentifier
-}
-
-func (n SyntaxTreeNode) ShallowCopy() SyntaxTreeNode {
-	return SyntaxTreeNode{
-		InnerToken: Token{
-			TokenKind: n.InnerToken.TokenKind,
-			Token:     n.InnerToken.Token,
-		},
-		ChildNodes: n.ChildNodes,
-		Datatype:   n.Datatype,
-	}
-}
-
-func (n SyntaxTreeNode) Display(start string) {
-	fmt.Println(start, NameMapWithTokenKind[n.InnerToken.TokenKind], n.InnerToken.Token, NameMapWithType[n.Datatype])
-	for _, t := range n.ChildNodes {
-		t.Display(start + ">")
-	}
-}
-
 type IdentifierInformation struct {
-	DataType DataTypeOfIdentifier
-	Mutable  bool
+	IdentifierName string
+	Datatype       Datatype
+	Mutable        bool
 }
 
 type UnderConstructionError struct {

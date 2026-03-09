@@ -10,8 +10,18 @@ As of right now, the compiler accepts:
 - floating point numbers
 - characters
 - booleans
+- arrays
 
 Strings are accepted only as the first parameter of an `output` call.
+
+## Arrays
+
+This compiler now accepts arrays. Arrays are supposed to be used like so:
+```
+let arr = [1, 2, 3];
+```
+
+The array index begins at 0. Multidimensional arrays are possible. All elements of the array must be of the same type.
 
 ## Comments
 
