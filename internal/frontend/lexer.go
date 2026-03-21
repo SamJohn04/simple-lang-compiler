@@ -8,7 +8,8 @@ import (
 	"github.com/SamJohn04/simple-lang-compiler/internal/common"
 )
 
-// The basic idea of this function is to accept both stdin and file input as parameters.
+// The basic idea of this function's first parameter as io.Reader
+// is to accept both stdin and file input as parameters.
 func Lexer(reader io.Reader, output chan<- common.Token) {
 	defer close(output)
 	scanner := bufio.NewScanner(reader)
@@ -23,14 +24,15 @@ func Lexer(reader io.Reader, output chan<- common.Token) {
 	// To denote the end of scanner
 	output <- common.Token{
 		TokenKind: common.TokenEOF,
-		Token:     "end of file",
+		Token:     "Lexer: end of file",
 	}
 }
 
 func lexLine(line string, lineNumber int, output chan<- common.Token) {
-	// Until the length of line is 0, keep calling lexSegment
 	for len(line) > 0 {
 		op, remainingLine := lexSegment(line)
+		// TokenEmpty is sent in case the remaining string has no meaningful components
+		// We do not wish to propogate such cases any further
 		if op.TokenKind != common.TokenEmpty {
 			// set LineNumber here
 			op.LineNumber = lineNumber
@@ -182,7 +184,7 @@ func lexSegment(segment string) (common.Token, string) {
 
 	case '&':
 		if len(segment) < 2 || segment[1] != '&' {
-			// since no other cases exist
+			// since a single & symbol is meaningless
 			return common.Token{
 				TokenKind: common.TokenError,
 				Token:     segment,
@@ -195,7 +197,7 @@ func lexSegment(segment string) (common.Token, string) {
 
 	case '|':
 		if len(segment) < 2 || segment[1] != '|' {
-			// since no other cases exist
+			// since a single | symbol is meaningless
 			return common.Token{
 				TokenKind: common.TokenError,
 				Token:     segment,
@@ -278,6 +280,7 @@ func lexSegment(segment string) (common.Token, string) {
 
 	// variable check
 	if isCharacterFromVariable(segment[0]) && !(segment[0] >= '0' && segment[0] <= '9') {
+		// the first character is a variable, so keep checking until it is not
 		index := isVariableCharactersUntil(segment)
 		return common.Token{
 			TokenKind: common.TokenIdent,
@@ -290,7 +293,8 @@ func lexSegment(segment string) (common.Token, string) {
 		end := 0
 		for i, c := range segment[1:] {
 			if c == '"' {
-				end = i + 2
+				// + 1 because we are starting the loop from segment[1]
+				end = i + 1
 				break
 			}
 		}
@@ -302,8 +306,8 @@ func lexSegment(segment string) (common.Token, string) {
 		}
 		return common.Token{
 			TokenKind: common.TokenLiteralString,
-			Token:     segment[:end],
-		}, segment[end:]
+			Token:     segment[:end+1],
+		}, segment[end+1:]
 	}
 
 	// character check
@@ -316,6 +320,7 @@ func lexSegment(segment string) (common.Token, string) {
 		}
 		switch segment[1] {
 		case '\'':
+			// '' (0 characters) is invalid
 			return common.Token{
 				TokenKind: common.TokenError,
 				Token:     segment,

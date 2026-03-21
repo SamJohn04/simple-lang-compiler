@@ -23,7 +23,6 @@ func lowerProgram(
 		Instructions: []common.InstructionAST{},
 	}
 
-	// make a copy of input
 	current := input
 	// it will exit when current has no children
 	for len(current.ChildNodes) > 0 {
