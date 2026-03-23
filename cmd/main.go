@@ -15,8 +15,8 @@ func main() {
 		fmt.Println("at least 1 argument required")
 		os.Exit(1)
 	}
-	filename := os.Args[1]
-	file, err := os.Open(filename)
+	inputFileName := os.Args[1]
+	file, err := os.Open(inputFileName)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -48,7 +48,6 @@ func main() {
 		identifiers,
 	)
 	if err != nil {
-		fmt.Println(strings.Join(intermediateCodes, "\n"))
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -59,9 +58,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	output_file_name := "output.c"
+	outputFileName := "output.c"
 	if len(os.Args) >= 3 {
-		output_file_name = os.Args[2]
+		outputFileName = os.Args[2]
 	}
-	os.WriteFile(output_file_name, []byte(finalCode), 0o664)
+	os.WriteFile(outputFileName, []byte(finalCode), 0o664)
 }
