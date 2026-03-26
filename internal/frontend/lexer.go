@@ -291,11 +291,16 @@ func lexSegment(segment string) (common.Token, string) {
 	// string check
 	if segment[0] == '"' {
 		end := 0
+		escapeFromNextCharacter := false
 		for i, c := range segment[1:] {
-			if c == '"' {
+			if c == '"' && !escapeFromNextCharacter {
 				// + 1 because we are starting the loop from segment[1]
 				end = i + 1
 				break
+			} else if c == '\\' && !escapeFromNextCharacter {
+				escapeFromNextCharacter = true
+			} else {
+				escapeFromNextCharacter = false
 			}
 		}
 		if end == 0 {
