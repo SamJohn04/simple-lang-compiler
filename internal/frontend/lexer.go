@@ -279,104 +279,129 @@ func lexSegment(segment string) (common.Token, string) {
 	}
 
 	// variable check
-	if isCharacterFromVariable(segment[0]) && !(segment[0] >= '0' && segment[0] <= '9') {
-		// the first character is a variable, so keep checking until it is not
-		index := isVariableCharactersUntil(segment)
-		return common.Token{
-			TokenKind: common.TokenIdent,
-			Token:     segment[:index],
-		}, segment[index:]
+	if segment[0] >= 'A' && segment[0] <= 'Z' ||
+		segment[0] >= 'a' && segment[0] <= 'z' ||
+		segment[0] == '_' {
+		return lexVariable(segment)
 	}
 
 	// string check
 	if segment[0] == '"' {
-		end := 0
-		escapeFromNextCharacter := false
-		for i, c := range segment[1:] {
-			if c == '"' && !escapeFromNextCharacter {
-				// + 1 because we are starting the loop from segment[1]
-				end = i + 1
-				break
-			} else if c == '\\' && !escapeFromNextCharacter {
-				escapeFromNextCharacter = true
-			} else {
-				escapeFromNextCharacter = false
-			}
-		}
-		if end == 0 {
-			return common.Token{
-				TokenKind: common.TokenError,
-				Token:     "\" is not closed",
-			}, ""
-		}
-		return common.Token{
-			TokenKind: common.TokenLiteralString,
-			Token:     segment[:end+1],
-		}, segment[end+1:]
+		return lexString(segment)
 	}
 
 	// character check
 	if segment[0] == '\'' {
-		if len(segment) < 3 {
-			return common.Token{
-				TokenKind: common.TokenError,
-				Token:     segment,
-			}, ""
-		}
-		switch segment[1] {
-		case '\'':
-			// '' (0 characters) is invalid
-			return common.Token{
-				TokenKind: common.TokenError,
-				Token:     segment,
-			}, ""
-
-		case '\\':
-			// verify the closing quotes
-			if len(segment) < 4 || segment[3] != '\'' {
-				return common.Token{
-					TokenKind: common.TokenError,
-					Token:     segment,
-				}, ""
-			}
-			return common.Token{
-				TokenKind: common.TokenLiteralChar,
-				Token:     segment[:4],
-			}, segment[4:]
-
-		default:
-			if segment[2] != '\'' {
-				return common.Token{
-					TokenKind: common.TokenError,
-					Token:     segment,
-				}, ""
-			}
-			return common.Token{
-				TokenKind: common.TokenLiteralChar,
-				Token:     segment[:3],
-			}, segment[3:]
-		}
+		return lexChar(segment)
 	}
 
 	// number check
 	if segment[0] >= '0' && segment[0] <= '9' {
-		index, fullstopIndex := isNumericCharactersUntil(segment)
-		if fullstopIndex == -1 {
-			return common.Token{
-				TokenKind: common.TokenLiteralInt,
-				Token:     segment[:index],
-			}, segment[index:]
-		}
-		return common.Token{
-			TokenKind: common.TokenLiteralFloat,
-			Token:     segment[:index],
-		}, segment[index:]
+		return lexNumber(segment)
 	}
 
 	return common.Token{
 		TokenKind: common.TokenError,
 		Token:     segment,
 	}, ""
+}
+
+func lexVariable(segment string) (common.Token, string) {
+	index := isVariableCharactersUntil(segment)
+	return common.Token{
+		TokenKind: common.TokenIdent,
+		Token:     segment[:index],
+	}, segment[index:]
+}
+
+func lexString(segment string) (common.Token, string) {
+	end := 0
+	escapeFromNextCharacter := false
+	for i, c := range segment[1:] {
+		if c == '"' && !escapeFromNextCharacter {
+			// + 1 because we are starting the loop from segment[1]
+			end = i + 1
+			break
+		} else if c == '\\' && !escapeFromNextCharacter {
+			escapeFromNextCharacter = true
+		} else {
+			escapeFromNextCharacter = false
+		}
+	}
+	if end == 0 {
+		return common.Token{
+			TokenKind: common.TokenError,
+			Token:     "\" is not closed",
+		}, ""
+	}
+	return common.Token{
+		TokenKind: common.TokenLiteralString,
+		Token:     segment[:end+1],
+	}, segment[end+1:]
+}
+
+func lexChar(segment string) (common.Token, string) {
+	if len(segment) < 3 {
+		return common.Token{
+			TokenKind: common.TokenError,
+			Token:     segment,
+		}, ""
+	}
+	switch segment[1] {
+	case '\'':
+		// '' (0 characters) is invalid
+		return common.Token{
+			TokenKind: common.TokenError,
+			Token:     segment,
+		}, ""
+
+	case '\\':
+		// verify the closing quotes
+		if len(segment) < 4 || segment[3] != '\'' {
+			return common.Token{
+				TokenKind: common.TokenError,
+				Token:     segment,
+			}, ""
+		}
+		return common.Token{
+			TokenKind: common.TokenLiteralChar,
+			Token:     segment[:4],
+		}, segment[4:]
+
+	default:
+		if segment[2] != '\'' {
+			return common.Token{
+				TokenKind: common.TokenError,
+				Token:     segment,
+			}, ""
+		}
+		return common.Token{
+			TokenKind: common.TokenLiteralChar,
+			Token:     segment[:3],
+		}, segment[3:]
+	}
+}
+
+func lexNumber(segment string) (common.Token, string) {
+	index := isNumberUntil(segment)
+	if index == len(segment) || segment[index] != '.' {
+		return common.Token{
+			TokenKind: common.TokenLiteralInt,
+			Token:     segment[:index],
+		}, segment[index:]
+	}
+	floatingPointIndex := isNumberUntil(segment[index+1:])
+	if floatingPointIndex == 0 {
+		// no number after floating point
+		return common.Token{
+			TokenKind: common.TokenError,
+			Token:     segment,
+		}, ""
+	}
+	return common.Token{
+		TokenKind: common.TokenLiteralFloat,
+		Token:     segment[:floatingPointIndex+index+1],
+	}, segment[floatingPointIndex+index+1:]
 }
 
 // Intended for multiple character tokens like if, mut, etc.
@@ -405,19 +430,12 @@ func isCharacterFromVariable(c byte) bool {
 	return c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_'
 }
 
-// Returns the index of the first non-numeric character and the '.' character (if it exists).
-// Returns on the second full stop as well as on any non-numeric characters.
-// If you need an integer, check the second value. If it is -1, use the first value, otherwise the second value.
-func isNumericCharactersUntil(segment string) (int, int) {
-	fullstopIndex := -1
+// Returns the index of the first non-numeric character
+func isNumberUntil(segment string) int {
 	for i, c := range segment {
-		if c >= '0' && c <= '9' {
-			continue
-		} else if c == '.' && fullstopIndex == -1 {
-			fullstopIndex = i
-			continue
+		if c < '0' || c > '9' {
+			return i
 		}
-		return i, fullstopIndex
 	}
-	return len(segment), fullstopIndex
+	return len(segment)
 }
