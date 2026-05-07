@@ -4,7 +4,7 @@ A compiler for a simple language, to help better understand the practical side o
 
 ## I/O
 
-Access to the C `printf` and `scanf("%d")` are provided using the `output` and `input` keywords respectively.
+Access to the C `printf` and `scanf("%lld")` are provided using the `output` and `input` keywords respectively.
 
 ## Datatypes
 
