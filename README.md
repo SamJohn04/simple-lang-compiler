@@ -27,6 +27,11 @@ The array index begins at 0. Multidimensional arrays are possible. All elements 
 
 Comments start with `//`, and are ignored by the lexer.
 
+Inline comments are possible. E.g.:
+```
+output "Hello World!\n"; // prints hello world
+```
+
 ## Parser
 
 For this compiler, an LL\(1\) parser has been chosen.
@@ -40,15 +45,15 @@ let mut i = 2;
 let mut fib1 = 1;
 let mut fib2 = 1;
 
-output "%d: %d\n", 0, fib1;
-output "%d: %d\n", 1, fib2;
+output "%lld: %lld\n", 0, fib1;
+output "%lld: %lld\n", 1, fib2;
 
 let mut temp;
 while i < n {
     temp = fib1 + fib2;
     fib1 = fib2;
     fib2 = temp;
-    output "%d: %d\n", i, temp;
+    output "%lld: %lld\n", i, temp;
 
     i = i + 1;
 };
@@ -59,14 +64,14 @@ let di = input;
 
 let mut i = 0;
 while i < n {
-    output "%d", i;
+    output "%lld", i;
     i = i + di;
 };
 
-output "%d", i;
-output "%d", n;
+output "%lld", i;
+output "%lld", n;
 ```
 
 ## Output
 
-The compiler converts the given code to C-language. As such, do not use any keywords in C as identifiers.
+The compiler converts the given code to C-language.
