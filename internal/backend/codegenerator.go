@@ -115,7 +115,7 @@ func writeCodeForLine(
 
 	if words[2] == "input" {
 		// i = input
-		fmt.Fprintf(codes, "scanf(\"%%lld\", &%v);", words[0])
+		fmt.Fprintf(codes, "%s = fgetc(stdin);", words[0])
 		return []string{}, nil
 	}
 
