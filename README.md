@@ -4,7 +4,7 @@ A compiler for a simple language, to help better understand the practical side o
 
 ## I/O
 
-Access to the C `printf` and `scanf("%lld")` are provided using the `output` and `input` keywords respectively.
+Access to the C `printf` and `fgetc(stdin)` are provided using the `output` and `input` keywords respectively.
 
 ## Datatypes
 
@@ -51,7 +51,7 @@ Comments start with `//`, and are ignored by the lexer.
 
 Inline comments are possible. E.g.:
 ```
-output "Hello World!\n"; // prints hello world
+output "Hello World!\n"; // prints Hello World!
 ```
 
 ## Parser
@@ -60,8 +60,10 @@ For this compiler, an LL\(1\) parser has been chosen.
 
 E.g. Program:
 ```
-output "Enter a number: ";
-let n = input;
+output "Enter a single digit number: ";
+let n1 = input;
+
+let n = n1 - '0';   // convert to int
 
 let mut i = 2;
 let mut fib1 = 1;
@@ -81,8 +83,8 @@ while i < n {
 };
 ```
 ```
-let n = input;
-let di = input;
+let n = input - '0';
+let di = input - '0';
 
 let mut i = 0;
 while i < n {
