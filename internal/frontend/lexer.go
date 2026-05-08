@@ -33,11 +33,14 @@ func lexLine(line string, lineNumber int, output chan<- common.Token) {
 		op, remainingLine := lexSegment(line)
 		// TokenEmpty is sent in case the remaining string has no meaningful components
 		// We do not wish to propogate such cases any further
-		if op.TokenKind != common.TokenEmpty {
-			// set LineNumber here
-			op.LineNumber = lineNumber
-			output <- op
+		if op.TokenKind == common.TokenEmpty {
+			line = remainingLine
+			continue
 		}
+
+		// set LineNumber here
+		op.LineNumber = lineNumber
+		output <- op
 		line = remainingLine
 	}
 }
