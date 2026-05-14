@@ -61,7 +61,7 @@ func main() {
 	// output file name is the input file with the sj removed and c added.
 	// Just in case the file name has no extension,
 	//	 a "." is (potentially) removed and added again
-	outputFileName := fmt.Sprintf("%v.c", strings.TrimSuffix(inputFileName, ".sj"))
+	outputFileName := fmt.Sprintf("%v.c", strings.TrimSuffix(inputFileName, ".sl"))
 	if len(os.Args) >= 3 {
 		outputFileName = os.Args[2]
 	}
