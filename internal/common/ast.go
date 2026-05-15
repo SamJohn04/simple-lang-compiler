@@ -308,7 +308,10 @@ func (o OutputStatementAST) ThreeAddressCode(
 	}
 
 	threeAddressCodes = append(threeAddressCodes, parameters...)
-	threeAddressCodes = append(threeAddressCodes, "call printf")
+	threeAddressCodes = append(threeAddressCodes, fmt.Sprintf(
+		"call printf %v",
+		len(parameters),
+	))
 	return threeAddressCodes, identifiers, nil
 }
 
@@ -467,15 +470,15 @@ func (b BinaryExpression) ThreeAddressCode(
 type InputExpression struct{}
 
 func (i InputExpression) GetDatatype(identifiers []IdentifierInformation) (Datatype, error) {
-	return TypedInt, nil
+	return TypedChar, nil
 }
 
 func (i InputExpression) ThreeAddressCode(
 	identifiers []IdentifierInformation,
 ) (string, []string, []IdentifierInformation, error) {
-	label, identifiers := nextIdentifier(identifiers, TypedInt)
+	label, identifiers := nextIdentifier(identifiers, TypedChar)
 	return label, []string{
-		fmt.Sprintf("%v = input", label),
+		fmt.Sprintf("%v = call getchar 0", label),
 	}, identifiers, nil
 }
 
@@ -581,7 +584,8 @@ type Identifier struct {
 }
 
 func (i Identifier) GetDatatype(identifiers []IdentifierInformation) (Datatype, error) {
-	// e.g., let v = {{1, 2}, {3, 4}, {5, 6}}; v[1] has {1} as ArrayValues and array{int, 2} as Datatype
+	// e.g., let v = {{1, 2}, {3, 4}, {5, 6}};
+	// v[1] has {1} as ArrayValues and array{int, 2} as Datatype
 	if i.Id < 0 || i.Id >= len(identifiers) {
 		return nil, errors.New("identifer out-of-bounds")
 	}
@@ -631,7 +635,12 @@ func (i Identifier) ThreeAddressCode(
 			threeAddressCode...,
 		)
 		next, identifiersCopy := nextIdentifier(identifiersCopy, TypedInt)
-		codes = append(codes, fmt.Sprintf("%v = %v * %v", next, offset, arrayDatatype.NumberOfElements))
+		codes = append(codes, fmt.Sprintf(
+			"%v = %v * %v",
+			next,
+			offset,
+			arrayDatatype.NumberOfElements,
+		))
 
 		offset, identifiers = nextIdentifier(identifiersCopy, TypedInt)
 		codes = append(codes, fmt.Sprintf("%v = %v + %v", offset, next, result))

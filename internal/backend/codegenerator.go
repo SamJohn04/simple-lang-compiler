@@ -113,7 +113,7 @@ func writeCodeForLine(
 		)
 	}
 
-	if words[2] == "input" {
+	if words[2] == "call" && words[3] == "getchar" {
 		// i = input
 		fmt.Fprintf(codes, "%s = fgetc(stdin);", words[0])
 		return []string{}, nil

@@ -211,17 +211,19 @@ func lexSegment(segment string) (common.Token, string) {
 			Token:     "||",
 		}, segment[2:]
 
+	case 'g':
+		if isWordToken(segment, "getchar") {
+			return common.Token{
+				TokenKind: common.TokenInput,
+				Token:     "getchar",
+			}, segment[7:]
+		}
 	case 'i':
 		if isWordToken(segment, "if") {
 			return common.Token{
 				TokenKind: common.TokenIf,
 				Token:     "if",
 			}, segment[2:]
-		} else if isWordToken(segment, "input") {
-			return common.Token{
-				TokenKind: common.TokenInput,
-				Token:     "input",
-			}, segment[5:]
 		}
 
 	case 'e':
@@ -240,14 +242,6 @@ func lexSegment(segment string) (common.Token, string) {
 			}, segment[5:]
 		}
 
-	case 'o':
-		if isWordToken(segment, "output") {
-			return common.Token{
-				TokenKind: common.TokenOutput,
-				Token:     "output",
-			}, segment[6:]
-		}
-
 	case 'l':
 		if isWordToken(segment, "let") {
 			return common.Token{
@@ -262,6 +256,14 @@ func lexSegment(segment string) (common.Token, string) {
 				TokenKind: common.TokenMutable,
 				Token:     "mut",
 			}, segment[3:]
+		}
+
+	case 'p':
+		if isWordToken(segment, "printf") {
+			return common.Token{
+				TokenKind: common.TokenOutput,
+				Token:     "printf",
+			}, segment[6:]
 		}
 
 	case 't':

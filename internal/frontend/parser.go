@@ -104,8 +104,8 @@ func parseNextInstruction(
 		return parseWhile(input, currentPointer)
 
 	case common.TokenOutput:
-		// I1 -> output str C
-		return parseOutput(input, currentPointer)
+		// I1 -> printf(str C)
+		return parsePrintf(input, currentPointer)
 
 	default:
 		return common.ParseTreeNode{}, parserError(
@@ -761,23 +761,32 @@ func parseWhile(
 	}, nil
 }
 
-func parseOutput(
+func parsePrintf(
 	input <-chan common.Token,
 	currentPointer *common.Token,
 ) (common.ParseTreeNode, error) {
-	// I1 -> output str C
+	// I1 -> printf(str C)
 	childOutput := common.ParseTreeNode{
 		InnerToken: common.Token{
 			TokenKind: common.TokenOutput,
-			Token:     "output",
+			Token:     "printf",
 		},
 		ChildNodes: []common.ParseTreeNode{},
 	}
 
 	*currentPointer = movePointerToNextToken(input)
+	if currentPointer.TokenKind != common.TokenOpenParanthesis {
+		return common.ParseTreeNode{}, parserError(
+			"Open paranthesis expected after printf.\n"+
+				"\tprintf is a function call now",
+			currentPointer,
+		)
+	}
+
+	*currentPointer = movePointerToNextToken(input)
 	if currentPointer.TokenKind != common.TokenLiteralString {
 		return common.ParseTreeNode{}, parserError(
-			"string literal expected after output",
+			"string literal expected after printf",
 			currentPointer,
 		)
 	}
@@ -790,15 +799,23 @@ func parseOutput(
 	}
 
 	*currentPointer = movePointerToNextToken(input)
-	childC, err := parseOutputContinuation(input, currentPointer)
+	childC, err := parsePrintfContinuation(input, currentPointer)
 	if err != nil {
 		return common.ParseTreeNode{}, err
 	}
 
+	if currentPointer.TokenKind != common.TokenCloseParanthesis {
+		return common.ParseTreeNode{}, parserError(
+			"Closing paranthesis expected after printf",
+			currentPointer,
+		)
+	}
+
+	*currentPointer = movePointerToNextToken(input)
 	outputBlock := common.ParseTreeNode{
 		InnerToken: common.Token{
 			TokenKind: common.TokenBlock,
-			Token:     "I1>output str C",
+			Token:     "I1>output (str C)",
 		},
 		ChildNodes: []common.ParseTreeNode{
 			childOutput,
@@ -809,12 +826,12 @@ func parseOutput(
 	return outputBlock, nil
 }
 
-func parseOutputContinuation(
+func parsePrintfContinuation(
 	input <-chan common.Token,
 	currentPointer *common.Token,
 ) (common.ParseTreeNode, error) {
 	switch currentPointer.TokenKind {
-	case common.TokenLineEnd:
+	case common.TokenCloseParanthesis:
 		return common.ParseTreeNode{
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
@@ -829,7 +846,7 @@ func parseOutputContinuation(
 		if err != nil {
 			return common.ParseTreeNode{}, err
 		}
-		childC, err := parseOutputContinuation(input, currentPointer)
+		childC, err := parsePrintfContinuation(input, currentPointer)
 		return common.ParseTreeNode{
 			InnerToken: common.Token{
 				TokenKind: common.TokenBlock,
@@ -843,7 +860,7 @@ func parseOutputContinuation(
 
 	default:
 		return common.ParseTreeNode{}, parserError(
-			"',' or ';' expected",
+			"',' or ')' expected",
 			currentPointer,
 		)
 	}
@@ -1526,8 +1543,6 @@ func parseF(
 	case common.TokenLiteralChar:
 		fallthrough
 	case common.TokenLiteralFloat:
-		fallthrough
-	case common.TokenInput:
 		child := common.ParseTreeNode{
 			InnerToken: common.Token{
 				TokenKind: currentPointer.TokenKind,
@@ -1544,6 +1559,42 @@ func parseF(
 			},
 			ChildNodes: []common.ParseTreeNode{
 				child,
+			},
+		}, nil
+
+	case common.TokenInput:
+		childInput := common.ParseTreeNode{
+			InnerToken: common.Token{
+				TokenKind: currentPointer.TokenKind,
+				Token:     currentPointer.Token,
+			},
+			ChildNodes: []common.ParseTreeNode{},
+		}
+
+		*currentPointer = movePointerToNextToken(input)
+		if currentPointer.TokenKind != common.TokenOpenParanthesis {
+			return common.ParseTreeNode{}, parserError(
+				"getchar is a function and must be followed by an open paranthesis",
+				currentPointer,
+			)
+		}
+
+		*currentPointer = movePointerToNextToken(input)
+		if currentPointer.TokenKind != common.TokenCloseParanthesis {
+			return common.ParseTreeNode{}, parserError(
+				"getchar expects no arguments, and thus must be closed immediately",
+				currentPointer,
+			)
+		}
+
+		*currentPointer = movePointerToNextToken(input)
+		return common.ParseTreeNode{
+			InnerToken: common.Token{
+				TokenKind: common.TokenBlock,
+				Token:     "F>getchar()",
+			},
+			ChildNodes: []common.ParseTreeNode{
+				childInput,
 			},
 		}, nil
 

@@ -4,7 +4,7 @@ A compiler for a simple language, to help better understand the practical side o
 
 ## I/O
 
-Access to the C `printf` and `fgetc(stdin)` are provided using the `output` and `input` keywords respectively.
+Access to the C `printf(...)` and `fgetc(stdin)` are provided using the `printf(...)` and `getchar()` functions respectively.
 
 ## Datatypes
 
@@ -51,7 +51,7 @@ Comments start with `//`, and are ignored by the lexer.
 
 Inline comments are possible. E.g.:
 ```
-output "Hello World!\n"; // prints Hello World!
+printf("Hello World!\n"; // prints Hello World)!
 ```
 
 ## Parser
@@ -60,8 +60,8 @@ For this compiler, an LL\(1\) parser has been chosen.
 
 E.g. Program:
 ```
-output "Enter a single digit number: ";
-let n1 = input;
+printf("Enter a single digit number: ");
+let n1 = getchar();
 
 let n = n1 - '0';   // convert to int
 
@@ -69,31 +69,31 @@ let mut i = 2;
 let mut fib1 = 1;
 let mut fib2 = 1;
 
-output "%lld: %lld\n", 0, fib1;
-output "%lld: %lld\n", 1, fib2;
+printf("%lld: %lld\n", 0, fib1);
+printf("%lld: %lld\n", 1, fib2);
 
 let mut temp;
 while i < n {
     temp = fib1 + fib2;
     fib1 = fib2;
     fib2 = temp;
-    output "%lld: %lld\n", i, temp;
+    printf("%lld: %lld\n", i, temp);
 
     i = i + 1;
 };
 ```
 ```
-let n = input - '0';
-let di = input - '0';
+let n = getchar() - '0';
+let di = getchar() - '0';
 
 let mut i = 0;
 while i < n {
-    output "%lld", i;
+    printf("%lld\n", i);
     i = i + di;
 };
 
-output "%lld", i;
-output "%lld", n;
+printf("%lld\n", i);
+printf("%lld\n", n);
 ```
 
 ## Output
