@@ -1,2 +1,5 @@
 /dest
 /planning
+/src
+/build
+shell.nix
