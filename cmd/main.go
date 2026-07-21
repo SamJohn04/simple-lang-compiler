@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/SamJohn04/simple-lang-compiler/internal/backend"
@@ -52,18 +53,46 @@ func main() {
 		os.Exit(1)
 	}
 
-	finalCode, err := backend.CodeGenerator(intermediateCodes, identifiers)
+	cCode, err := backend.CodeGenerator(intermediateCodes, identifiers)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	// output file name is the input file with the sl removed and c added.
-	// Just in case the file name has no extension,
-	//	 a "." is (potentially) removed and added again
-	outputFileName := fmt.Sprintf("%v.c", strings.TrimSuffix(inputFileName, ".sl"))
+	// output file name is the input file with the sl removed and 'out' added.
+	// Just in case the file name has no extension, a "." is (potentially) removed and added again
+	// Expects gcc in your system
+	outputFileName := fmt.Sprintf("%v.out", strings.TrimSuffix(inputFileName, ".sl"))
 	if len(os.Args) >= 3 {
 		outputFileName = os.Args[2]
 	}
-	os.WriteFile(outputFileName, []byte(finalCode), 0o664)
+	err = toObjectFile(outputFileName, cCode)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+func toObjectFile(outputFileName, cCode string) error {
+	tmpFile, err := os.CreateTemp("", "prog-*.c")
+	if err != nil {
+		return fmt.Errorf("failed to create temp file: %w", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.WriteString(cCode); err != nil {
+		tmpFile.Close()
+		return fmt.Errorf("failed to write c code to temp file: %w", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("failed to close temp file: %w", err)
+	}
+
+	cmd := exec.Command("gcc", tmpFile.Name(), "-o", outputFileName)
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("gcc failed: %w", err)
+	}
+	return nil
 }

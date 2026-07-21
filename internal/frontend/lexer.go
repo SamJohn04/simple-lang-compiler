@@ -20,6 +20,12 @@ func Lexer(reader io.Reader, output chan<- common.Token) {
 		line := scanner.Text()
 		lexLine(line, lineNumber, output)
 	}
+	if err := scanner.Err(); err != nil {
+		output <- common.Token{
+			TokenKind: common.TokenError,
+			Token:     err.Error(),
+		}
+	}
 
 	// To denote the end of scanner
 	output <- common.Token{
