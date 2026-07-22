@@ -4,7 +4,8 @@ A compiler for a simple language, to help better understand the practical side o
 
 ## I/O
 
-Access to the C `printf(...)` and `fgetc(stdin)` are provided using the `printf(...)` and `getchar()` functions respectively.
+Access to the C functions `printf(...)` and `fgetc(stdin)` are provided
+using the `printf(...)` and `getchar()` functions respectively.
 
 ## Datatypes
 
@@ -16,7 +17,7 @@ As of right now, the compiler accepts:
 - booleans
 - arrays
 
-Strings are accepted only as the first parameter of an `output` call.
+Strings are accepted only as the first parameter of a `printf` call.
 
 ## Integers
 
@@ -51,14 +52,19 @@ Comments start with `//`, and are ignored by the lexer.
 
 Inline comments are possible. E.g.:
 ```
-printf("Hello World!\n"; // prints Hello World)!
+printf("Hello World!\n"); // prints Hello World!
 ```
 
 ## Parser
 
 For this compiler, an LL\(1\) parser has been chosen.
 
-E.g. Program:
+## Example
+
+E.g. Programs:
+
+Print upto n fibonacci numbers:
+
 ```
 printf("Enter a single digit number: ");
 let n1 = getchar();
@@ -82,6 +88,9 @@ while i < n {
     i = i + 1;
 };
 ```
+
+Print i..n every di number of times:
+
 ```
 let n = getchar() - '0';
 let di = getchar() - '0';
@@ -91,11 +100,9 @@ while i < n {
     printf("%lld\n", i);
     i = i + di;
 };
-
-printf("%lld\n", i);
-printf("%lld\n", n);
 ```
 
 ## Output
 
-The compiler converts the given code to C-language.
+The compiler converts the given code to an executable.
+To do so, the compiler calls `gcc` internally.
